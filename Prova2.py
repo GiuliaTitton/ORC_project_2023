@@ -139,7 +139,7 @@ for (test_id, test) in  enumerate(tests):
         dJdq = robot.frameAcceleration(q[:,i], v[:,i], None, frame_id, False).linear
         
         # implement the components needed for your control laws here
-        ddx_fb = kp * (x_ref[:,i] - x[:,i]) + kd * (dx_ref[:,i] - dx[:,i]) # Feedback acceleration
+        ddx_fb = kp_j * (x_ref[:,i] - x[:,i]) + kd_j * (dx_ref[:,i] - dx[:,i]) # Feedback acceleration
         ddx_des[:,i] = ddx_ref[:,i] + ddx_fb                               # Desired acceleration
         Minv = np.linalg.inv(M)                                            # M^-1
         lambda_mat = np.linalg.inv(J.dot(Minv).dot(J.T))                   # OS Inertia matrix
@@ -151,7 +151,7 @@ for (test_id, test) in  enumerate(tests):
         NJ = np.eye(robot.nv) - J.T.dot(J_T_pinv)        # Null space of the pseudo-inverse of J.T
         J_moore_pinv = J.T.dot(np.linalg.inv(J.dot(J.T))) # Moore Penrose pseudo-inverse of J.T 
         #NJ_moore = np.eye(robot.nv) - J.T.dot(J_moore_pinv) # Null space of the Moore Penrose pseudo-inverse of J.T
-        ddq_pos_des = kp * (conf.q0 - q[:,0]) - kd * v[:,0]  # Let's choose ddq_pos_des to stabilize the initial joint configuration
+        ddq_pos_des = kp_j * (conf.q0 - q[:,0]) - kd * v[:,0]  # Let's choose ddq_pos_des to stabilize the initial joint configuration
         tau_0 = M.dot(ddq_pos_des)                       # M*ddq_pos_des
 
 
