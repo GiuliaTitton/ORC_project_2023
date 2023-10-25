@@ -14,10 +14,10 @@ print("".center(conf.LINE_WIDTH,'#'))
 print(" Manipulator: Impedence Control vs. Operational Space Control vs. Inverse Kinematics + Inverse Dynamics ".center(conf.LINE_WIDTH, '#'))
 print("".center(conf.LINE_WIDTH,'#'), '\n')
 
-PLOT_TORQUES = 0
-PLOT_EE_POS = 0
-PLOT_EE_VEL = 0
-PLOT_EE_ACC = 0
+PLOT_TORQUES = 1
+PLOT_EE_POS = 1
+PLOT_EE_VEL = 1
+PLOT_EE_ACC = 1
 
 r = loadUR()
 robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
@@ -159,7 +159,7 @@ for (test_id, test) in  enumerate(tests):
 
 
         # define the control laws here
-        if(test['controller']=='IC_O_simpl'):
+        '''if(test['controller']=='IC_O_simpl'):
             tau[:,i] = h + J.T.dot(K.dot(x_ref[:,i] - x[:,i]) + B.dot(dx_ref[:,i] - dx[:,i]))    
 
         elif(test['controller']=='IC_O_simpl_post'):
@@ -169,9 +169,9 @@ for (test_id, test) in  enumerate(tests):
             tau[:,i] = J.T.dot(K.dot(x_ref[:,i] - x[:,i]) + B.dot(dx_ref[:,i] - dx[:,i]) + mu)
 
         elif(test['controller']=='IC_O_post'):                                          
-            tau[:,i] = J.T.dot(K.dot(x_ref[:,i] - x[:,i]) + B.dot(dx_ref[:,i] - dx[:,i]) + mu) + NJ.dot(tau_0 + h)
+            tau[:,i] = J.T.dot(K.dot(x_ref[:,i] - x[:,i]) + B.dot(dx_ref[:,i] - dx[:,i]) + mu) + NJ.dot(tau_0 + h)'''
 
-        '''if(test['controller']=='OSC'):      # Operational Space Control
+        if(test['controller']=='OSC'):      # Operational Space Control
             tau[:,i] = J.T.dot(f) + NJ.dot(tau_0 + h)
 
         elif(test['controller']=='IC'):     # Impedance Control
@@ -179,7 +179,7 @@ for (test_id, test) in  enumerate(tests):
 
         else:
             print('ERROR: Unknown controller', test['controller'])
-            sys.exit(0)'''
+            sys.exit(0)
         
         # send joint torques to simulator
         simu.simulate(tau[:,i], conf.dt, conf.ndt)
