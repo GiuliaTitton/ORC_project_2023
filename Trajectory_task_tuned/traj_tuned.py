@@ -156,7 +156,7 @@ for (test_id, test) in  enumerate(tests):
             print("tracking error attuale: " + str(tracking_err) + " Kp attuale: " + str(kp))
     elif test['controller']=='IC':
         tracking_err = 1
-        while tracking_err > 0.001:
+        while tracking_err > 0.0024:
             
         
             for i in range(0, N):
