@@ -25,11 +25,11 @@ robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
 if conf.TRACK_TRAJ:
     tests = []
     
-    tests += [{'controller': 'OSC', 'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
-    tests += [{'controller': 'IC',  'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+    #tests += [{'controller': 'OSC', 'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+    #tests += [{'controller': 'IC',  'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
 
-    #tests += [{'controller': 'OSC', 'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
-    #tests += [{'controller': 'IC',  'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+    tests += [{'controller': 'OSC', 'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+    tests += [{'controller': 'IC',  'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
 else:
     tests = []
 
@@ -143,8 +143,8 @@ for (test_id, test) in  enumerate(tests):
         ddx_des[:,i] = ddx_ref[:,i] + ddx_fb                               # Desired acceleration
         Minv = np.linalg.inv(M)                                            # M^-1
         lambda_mat = np.linalg.inv(J.dot(Minv).dot(J.T))                   # OS Inertia matrix
-        K = np.array([[100, 0, 0], [0, 100, 0], [0, 0, 100]])              # stiffness matrix
-        B = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])                    # damping matrix
+        K = np.array([[11500, 0, 0], [0, 11500, 0], [0, 0, 11500]])        # stiffness matrix
+        B = np.array([[300, 0, 0], [0, 300, 0], [0, 0, 300]])              # damping matrix
         mu = lambda_mat.dot((J.dot(Minv)).dot(h) - dJdq)                   # mu 
         f = lambda_mat.dot(ddx_des[:,i]) + mu                              # f_desired (OSC)
         
