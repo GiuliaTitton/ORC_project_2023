@@ -27,8 +27,8 @@ tests = []
 tests += [{'controller': 'OSC', 'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
 tests += [{'controller': 'IC',  'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
 
-'''tests += [{'controller': 'OSC', 'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
-tests += [{'controller': 'IC',  'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]  ''' 
+tests += [{'controller': 'OSC', 'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+tests += [{'controller': 'IC',  'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]   
 
 
 plt.tight_layout(rect=[0, 0, 1, 0.95])
@@ -81,7 +81,7 @@ for (test_id, test) in  enumerate(tests):
     
     if test['controller']=='OSC':
         tracking_err = 1
-        while tracking_err > 0.002:
+        while tracking_err > 0.0015: #0.003 for high frequency test
 
             for i in range(0, N):
                 time_start = time.time()
@@ -151,11 +151,13 @@ for (test_id, test) in  enumerate(tests):
                 if(conf.simulate_real_time and time_spent < conf.dt): 
                     time.sleep(conf.dt-time_spent)
             tracking_err = np.sum(norm(x_ref-x, axis=0))/N
-            kp += 30
+            kp += 100
             print("tracking error= " + str(tracking_err) + ", Kp= " + str(kp))
+      
     elif test['controller']=='IC':
         tracking_err = 1
-        while tracking_err > 0.001:
+        #kp = 50 for high frequency test
+        while tracking_err > 0.0051: #0.052 for high frequency test
 
             for i in range(0, N):
                 time_start = time.time()
@@ -225,8 +227,9 @@ for (test_id, test) in  enumerate(tests):
                 if(conf.simulate_real_time and time_spent < conf.dt): 
                     time.sleep(conf.dt-time_spent)
             tracking_err = np.sum(norm(x_ref-x, axis=0))/N
-            kp += 30
-            print("tracking error= " + str(tracking_err) + ", Kp= " + str(kp))
+            #kp += 10 for high frequency test
+            kp += 50 
+            print("tracking error= " + str(tracking_err) + ", Kp= " + str(kp)) 
     
     desc = test['controller']+' kp='+str(test['kp'])+' frequency=[{},{},{}]'.format(test['frequency'][0],test['frequency'][1],test['frequency'][2])  
     if(test['controller']=='OSC'):        
@@ -294,7 +297,7 @@ if conf.TRACK_TRAJ:
         ax.plot(0, err['value'], 's', markersize=20, label=err['description'])
     for (i,err) in enumerate(tracking_err_ic):
         ax.plot(1, err['value'], 'o', markersize=20, label=err['description'])
-else:
+'''else:
     for (i,err) in enumerate(stab_err_ic_O_simpl):
         ax.plot(0, err['value'], 's', markersize=20, label=err['description'])
     for (i,err) in enumerate(stab_err_ic_O_simpl_post):
@@ -302,10 +305,12 @@ else:
     for (i,err) in enumerate(stab_err_ic_O):
         ax.plot(2, err['value'], 's', markersize=20, label=err['description'])
     for (i,err) in enumerate(stab_err_ic_O_post):
-        ax.plot(3, err['value'], 's', markersize=20, label=err['description']) 
+        ax.plot(3, err['value'], 's', markersize=20, label=err['description']) '''
 ax.set_xlabel('Test')
 ax.set_ylabel('Mean tracking error [m]')
 leg = ax.legend()
 leg.get_frame().set_alpha(0.5)
 
+# N.B. PLOTS IN REPORT HAVE BEEN MADE IN A SEPARATE FILE ONE BY ONE TO NOT OVERWRITE DATA
+print("PLOTS IN REPORT HAVE BEEN MADE IN A SEPARATE FILE ONE BY ONE TO NOT OVERWRITE DATA")
 plt.show()

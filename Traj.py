@@ -25,8 +25,8 @@ robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
 if conf.TRACK_TRAJ:
     tests = []
     
-    #tests += [{'controller': 'OSC', 'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
-    #tests += [{'controller': 'IC',  'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+    tests += [{'controller': 'OSC', 'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+    tests += [{'controller': 'IC',  'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
 
     tests += [{'controller': 'OSC', 'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
     tests += [{'controller': 'IC',  'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
