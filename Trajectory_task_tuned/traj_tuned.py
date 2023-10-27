@@ -46,7 +46,7 @@ for (test_id, test) in  enumerate(tests):
 
     #kp = test['kp']             # proportional gain of tracking task
     # parameter to be tuned
-    kp = 500.0
+    kp = 200.0
     kd = 2*np.sqrt(kp)          # derivative gain of tracking task
     kp_j = 20.0                 # proportional gain of end effector task
     kd_j = 2*sqrt(kp_j)         # derivative gain of end effector task
@@ -118,8 +118,8 @@ for (test_id, test) in  enumerate(tests):
                 ddx_des[:,i] = ddx_ref[:,i] + ddx_fb                               # Desired acceleration
                 Minv = np.linalg.inv(M)                                            # M^-1
                 lambda_mat = np.linalg.inv(J.dot(Minv).dot(J.T))                   # OS Inertia matrix
-                K = np.array([[11500, 0, 0], [0, 11500, 0], [0, 0, 11500]])        # stiffness matrix
-                B = np.array([[300, 0, 0], [0, 300, 0], [0, 0, 300]])              # damping matrix
+                K = np.array([[10000, 5000, 5000], [5000, 10000, 5000], [5000, 5000, 10000]])        # stiffness matrix
+                B = np.array([[300, 200, 200], [200, 300, 200], [200, 200, 300]])              # damping matrix
                 mu = lambda_mat.dot((J.dot(Minv)).dot(h) - dJdq)                   # mu 
                 f = lambda_mat.dot(ddx_des[:,i]) + mu                              # f_desired (OSC)
                 # secondary task here
@@ -193,8 +193,8 @@ for (test_id, test) in  enumerate(tests):
                 ddx_des[:,i] = ddx_ref[:,i] + ddx_fb                               # Desired acceleration
                 Minv = np.linalg.inv(M)                                            # M^-1
                 lambda_mat = np.linalg.inv(J.dot(Minv).dot(J.T))                   # OS Inertia matrix
-                K = np.array([[11500, 0, 0], [0, 11500, 0], [0, 0, 11500]])        # stiffness matrix
-                B = np.array([[300, 0, 0], [0, 300, 0], [0, 0, 300]])              # damping matrix
+                K = np.array([[10000, 5000, 5000], [5000, 10000, 5000], [5000, 5000, 10000]])        # stiffness matrix
+                B = np.array([[300, 200, 200], [200, 300, 200], [200, 200, 300]])              # damping matrix
                 mu = lambda_mat.dot((J.dot(Minv)).dot(h) - dJdq)                   # mu 
                 f = lambda_mat.dot(ddx_des[:,i]) + mu                              # f_desired (OSC)
                 # secondary task here
