@@ -14,10 +14,10 @@ print("".center(conf.LINE_WIDTH,'#'))
 print(" Manipulator: Impedence Control vs. Operational Space Control vs. Inverse Kinematics + Inverse Dynamics ".center(conf.LINE_WIDTH, '#'))
 print("".center(conf.LINE_WIDTH,'#'), '\n')
 
-PLOT_TORQUES = 1
+PLOT_TORQUES = 0
 PLOT_EE_POS = 1
-PLOT_EE_VEL = 1
-PLOT_EE_ACC = 1
+PLOT_EE_VEL = 0
+PLOT_EE_ACC = 0
 
 r = loadUR()
 robot = RobotWrapper(r.model, r.collision_model, r.visual_model)
@@ -28,20 +28,20 @@ if conf.TRACK_TRAJ:
     tests += [{'controller': 'OSC', 'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
     tests += [{'controller': 'IC',  'kp': 100,  'frequency': np.array([1.0, 1.0, 0.3]), 'friction': 2}]
 
-    #tests += [{'controller': 'OSC', 'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
-    #tests += [{'controller': 'IC',  'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+    tests += [{'controller': 'OSC', 'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
+    tests += [{'controller': 'IC',  'kp': 100,  'frequency': 3*np.array([1.0, 1.0, 0.3]), 'friction': 2}]
 else:
     tests = []
 
-    '''tests += [{'controller': 'IC_O_simpl',  'kp': 250,  'frequency': np.array([0.0, 0.0, 0.0]),  'friction': 0}]        
+    tests += [{'controller': 'IC_O_simpl',  'kp': 250,  'frequency': np.array([0.0, 0.0, 0.0]),  'friction': 0}]        
     tests += [{'controller': 'IC_O_simpl_post',  'kp': 250,  'frequency': np.array([0.0, 0.0, 0.0]),'friction': 0}]    
-    #tests += [{'controller': 'IC_O',  'kp': 250, 'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 0}]              
-    tests += [{'controller': 'IC_O_post',  'kp': 250, 'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 0}] '''       
+    tests += [{'controller': 'IC_O',  'kp': 250, 'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 0}]              
+    tests += [{'controller': 'IC_O_post',  'kp': 250, 'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 0}]         
 
-    tests += [{'controller': 'IC_O_simpl',  'kp': 250,'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 2}]        
-    tests += [{'controller': 'IC_O_simpl_post',  'kp': 250,'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 2}]       
+    #tests += [{'controller': 'IC_O_simpl',  'kp': 250,'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 2}]        
+    #tests += [{'controller': 'IC_O_simpl_post',  'kp': 250,'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 2}]       
     #tests += [{'controller': 'IC_O',  'kp': 250,'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 2}]               
-    tests += [{'controller': 'IC_O_post',  'kp': 250,'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 2}]     
+    #tests += [{'controller': 'IC_O_post',  'kp': 250,'frequency': np.array([0.0, 0.0, 0.0]), 'friction': 2}]       
 
 
 
@@ -139,7 +139,7 @@ for (test_id, test) in  enumerate(tests):
         dJdq = robot.frameAcceleration(q[:,i], v[:,i], None, frame_id, False).linear
         
         # implement the components needed for your control laws here
-        ddx_fb = kp_j * (x_ref[:,i] - x[:,i]) + kd_j * (dx_ref[:,i] - dx[:,i]) # Feedback acceleration
+        ddx_fb = kp * (x_ref[:,i] - x[:,i]) + kd * (dx_ref[:,i] - dx[:,i]) # Feedback acceleration
         ddx_des[:,i] = ddx_ref[:,i] + ddx_fb                               # Desired acceleration
         Minv = np.linalg.inv(M)                                            # M^-1
         lambda_mat = np.linalg.inv(J.dot(Minv).dot(J.T))                   # OS Inertia matrix
@@ -152,25 +152,22 @@ for (test_id, test) in  enumerate(tests):
         J_T_pinv = lambda_mat.dot(J.dot(Minv))           # Pseudo-inverse of J.T 
         NJ = np.eye(robot.nv) - J.T.dot(J_T_pinv)        # Null space of the pseudo-inverse of J.T
         J_moore_pinv = J.T.dot(np.linalg.inv(J.dot(J.T))) # Moore Penrose pseudo-inverse of J.T 
-        #NJ_moore = np.eye(robot.nv) - J.T.dot(J_moore_pinv) # Null space of the Moore Penrose pseudo-inverse of J.T
-        ddq_pos_des = kp_j * (conf.q0 - q[:,i]) - kd_j * v[:,i]  # Let's choose ddq_pos_des to stabilize the initial joint configuration
+        ddq_pos_des = kp * (conf.q0 - q[:,i]) - kd * v[:,i]  # Let's choose ddq_pos_des to stabilize the initial joint configuration
         tau_0 = M.dot(ddq_pos_des)                       # M*ddq_pos_des
 
 
 
         # define the control laws here
-        if(test['controller']=='IC_O_simpl'):
-            tau[:,i] = h + J.T.dot(K.dot(x_ref[:,i] - x[:,i]) + B.dot(dx_ref[:,i] - dx[:,i]))    
 
-        elif(test['controller']=='IC_O_simpl_post'):
+        if(test['controller']=='OSC'):      # Operational Space Control
+            tau[:,i] = J.T.dot(f) + NJ.dot(tau_0 + h)
+
+        elif(test['controller']=='IC'):     # Impedance Control
             tau[:,i] = h + J.T.dot(K.dot(x_ref[:,i] - x[:,i]) + B.dot(dx_ref[:,i] - dx[:,i])) + NJ.dot(tau_0)
 
-        elif(test['controller']=='IC_O'):
-            tau[:,i] = J.T.dot(K.dot(x_ref[:,i] - x[:,i]) + B.dot(dx_ref[:,i] - dx[:,i]) + mu)
-
-        elif(test['controller']=='IC_O_post'):                                          
-            tau[:,i] = J.T.dot(K.dot(x_ref[:,i] - x[:,i]) + B.dot(dx_ref[:,i] - dx[:,i]) + mu) + NJ.dot(tau_0 + h)
-
+        else:
+            print('ERROR: Unknown controller', test['controller'])
+            sys.exit(0)
         
         # send joint torques to simulator
         simu.simulate(tau[:,i], conf.dt, conf.ndt)
@@ -191,17 +188,6 @@ for (test_id, test) in  enumerate(tests):
             tracking_err_osc += [{'value': tracking_err, 'description': desc}]
         elif(test['controller']=='IC'):
             tracking_err_ic += [{'value': tracking_err, 'description': desc}]    
-        else:
-            print('ERROR: Unknown controller', test['controller'])
-    else:
-        if(test['controller']=='IC_O_simpl'):
-            stab_err_ic_O_simpl += [{'value': tracking_err, 'description': desc}]
-        elif(test['controller']=='IC_O_simpl_post'):
-            stab_err_ic_O_simpl_post += [{'value': tracking_err, 'description': desc}]
-        elif(test['controller']=='IC_O'):
-            stab_err_ic_O += [{'value': tracking_err, 'description': desc}]
-        elif(test['controller']=='IC_O_post'):
-            stab_err_ic_O_post += [{'value': tracking_err, 'description': desc}]
         else:
             print('ERROR: Unknown controller', test['controller'])
     
