@@ -29,7 +29,7 @@ phi         = np.array([0.0, 0.5*np.pi, 0.0]).T     # phase
 tau_coulomb_max = 0
 simulation_type = 'timestepping' # either 'timestepping' or 'euler'
 
-randomize_robot_model = 0
+randomize_robot_model = 1
 model_variation = 40.0
 
 use_viewer = 1
