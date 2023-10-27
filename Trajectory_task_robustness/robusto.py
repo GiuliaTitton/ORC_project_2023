@@ -152,7 +152,6 @@ for (test_id, test) in  enumerate(tests):
         J_T_pinv = lambda_mat.dot(J.dot(Minv))           # Pseudo-inverse of J.T 
         NJ = np.eye(robot.nv) - J.T.dot(J_T_pinv)        # Null space of the pseudo-inverse of J.T
         J_moore_pinv = J.T.dot(np.linalg.inv(J.dot(J.T))) # Moore Penrose pseudo-inverse of J.T 
-        #NJ_moore = np.eye(robot.nv) - J.T.dot(J_moore_pinv) # Null space of the Moore Penrose pseudo-inverse of J.T
         ddq_pos_des = kp * (conf.q0 - q[:,i]) - kd * v[:,i]  # Let's choose ddq_pos_des to stabilize the initial joint configuration
         tau_0 = M.dot(ddq_pos_des)                       # M*ddq_pos_des
 
@@ -191,17 +190,6 @@ for (test_id, test) in  enumerate(tests):
             tracking_err_ic += [{'value': tracking_err, 'description': desc}]    
         else:
             print('ERROR: Unknown controller', test['controller'])
-    '''else:
-        if(test['controller']=='IC_O_simpl'):
-            stab_err_ic_O_simpl += [{'value': tracking_err, 'description': desc}]
-        elif(test['controller']=='IC_O_simpl_post'):
-            stab_err_ic_O_simpl_post += [{'value': tracking_err, 'description': desc}]
-        elif(test['controller']=='IC_O'):
-            stab_err_ic_O += [{'value': tracking_err, 'description': desc}]
-        elif(test['controller']=='IC_O_post'):
-            stab_err_ic_O_post += [{'value': tracking_err, 'description': desc}]
-        else:
-            print('ERROR: Unknown controller', test['controller'])'''
     
     print('Average tracking error %.3f m\n'%(tracking_err))
     
