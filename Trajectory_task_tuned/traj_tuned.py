@@ -46,7 +46,7 @@ for (test_id, test) in  enumerate(tests):
 
     #kp = test['kp']             # proportional gain of tracking task
     # parameter to be tuned
-    kp = 200.0
+    kp = 600.0
     kd = 2*np.sqrt(kp)          # derivative gain of tracking task
     kp_j = 20.0                 # proportional gain of end effector task
     kd_j = 2*sqrt(kp_j)         # derivative gain of end effector task
@@ -81,9 +81,8 @@ for (test_id, test) in  enumerate(tests):
     
     if test['controller']=='OSC':
         tracking_err = 1
-        while tracking_err > 0.005:
-            
-        
+        while tracking_err > 0.002:
+
             for i in range(0, N):
                 time_start = time.time()
                 
@@ -153,12 +152,11 @@ for (test_id, test) in  enumerate(tests):
                     time.sleep(conf.dt-time_spent)
             tracking_err = np.sum(norm(x_ref-x, axis=0))/N
             kp += 30
-            print("tracking error attuale: " + str(tracking_err) + " Kp attuale: " + str(kp))
+            print("tracking error= " + str(tracking_err) + ", Kp= " + str(kp))
     elif test['controller']=='IC':
         tracking_err = 1
-        while tracking_err > 0.0024:
-            
-        
+        while tracking_err > 0.001:
+
             for i in range(0, N):
                 time_start = time.time()
                 
@@ -228,7 +226,7 @@ for (test_id, test) in  enumerate(tests):
                     time.sleep(conf.dt-time_spent)
             tracking_err = np.sum(norm(x_ref-x, axis=0))/N
             kp += 30
-            print("tracking error attuale: " + str(tracking_err) + " Kp attuale: " + str(kp))
+            print("tracking error= " + str(tracking_err) + ", Kp= " + str(kp))
     
     desc = test['controller']+' kp='+str(test['kp'])+' frequency=[{},{},{}]'.format(test['frequency'][0],test['frequency'][1],test['frequency'][2])  
     if(test['controller']=='OSC'):        
