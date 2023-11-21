@@ -16,16 +16,16 @@ class OCPFinalCostState:
     def compute(self, x, recompute=True):
         ''' Compute the cost given the final state x '''
         v = x[self.nq:]
-        de =         # TODO implement penalty on the final velocity
-        cost =         # TODO implement penalty on the final velocity
+        de = v - self.v_des        # TODO implement penalty on the final velocity
+        cost = 0.5*self.weight_vel*de.dot(de)        # TODO implement penalty on the final velocity
         return cost
         
     def compute_w_gradient(self, x, recompute=True):
         ''' Compute the cost and its gradient given the final state x '''
         v = x[self.nq:]
-        de =         # TODO implement penalty on the final velocity
-        cost =         # TODO implement penalty on the final velocity
-        grad =         # TODO implement the gradient of the penalty on the final velocity
+        de = v - self.v_des        # TODO implement penalty on the final velocity
+        cost = 0.5*self.weight_vel*de.dot(de)        # TODO implement penalty on the final velocity
+        grad = self.weight_vel*de        # TODO implement the gradient of the penalty on the final velocity
         return (cost, grad)
         
 class OCPRunningCostQuadraticControl:
@@ -36,14 +36,14 @@ class OCPRunningCostQuadraticControl:
         
     def compute(self, x, u, t, recompute=True):
         ''' Compute the cost for a single time instant'''
-        cost =         # TODO implement control regularization
+        cost = 0.5*u.dot(u)        # TODO implement control regularization
 
         return cost
         
     def compute_w_gradient(self, x, u, t, recompute=True):
         ''' Compute the cost for a single time instant and its gradient w.r.t. x and u '''
-        cost =         # TODO implement control regularization
-        grad_x =         # TODO implement the gradient w.r.t. x of the control regularization
-        grad_u =         # TODO implement the gradient w.r.t. u of the control regularization
+        cost = 0.5*u.dot(u)        # TODO implement control regularization
+        grad_x = np.zeros(x.shape[0])        # TODO implement the gradient w.r.t. x of the control regularization
+        grad_u = u        # TODO implement the gradient w.r.t. u of the control regularization
 
         return (cost, grad_x, grad_u)
