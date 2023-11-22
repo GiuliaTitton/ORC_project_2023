@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import A2_conf as conf
 
 class OCPJointFinalBounds:
     ''' Final inequality constraint for joint bounds. The constraint is defined as:
@@ -57,14 +58,14 @@ class OCPVFinalBounds:
         ''' Compute the cost given the state x '''
         q = x[:self.nq]
         v = x[self.nq:]
-        ineq = np.concatenate((v-self.dq_min, self.dq_max-v))        # TODO implement the jacobian of the inequality constraint
+        ineq = np.concatenate((v+conf.eps_thr, conf.eps_thr-v))        # TODO implement the jacobian of the inequality constraint
         return ineq
     
     def compute_w_gradient(self, x, recompute=True):
         ''' Compute the cost and its gradient given the final state x '''
         q = x[:self.nq]
         v = x[self.nq:]
-        ineq = np.concatenate((v-self.dq_min, self.dq_max-v))         # TODO implement the inequality constraint
+        ineq = np.concatenate((v+conf.eps_thr, conf.eps_thr-v))         # TODO implement the inequality constraint
         
         # compute Jacobian
         nx = x.shape[0]
