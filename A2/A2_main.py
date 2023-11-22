@@ -10,9 +10,9 @@ import orc.utils.plot_utils as plut
 import A2_conf as conf
 from single_shooting_problem import SingleShootingProblem
 
-from orc.A2.ode import ODEPendulum
-from orc.A2.cost_functions import OCPFinalCostState, OCPRunningCostQuadraticControl
-from orc.A2.inequality_constraints import OCPJointPathBounds, OCPJointFinalBounds, OCPVFinalBounds
+from orc.optimal_control.A2.ode import ODEPendulum
+from orc.optimal_control.A2.cost_functions import OCPFinalCostState, OCPRunningCostQuadraticControl
+from orc.optimal_control.A2.inequality_constraints import OCPJointPathBounds, OCPJointFinalBounds, OCPVFinalBounds
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 
@@ -27,8 +27,11 @@ n = nq+nv                       # state size
 m = conf.nu                     # control size
 
 # TODO implement a search strategy to select n_ics initial states to be checked (for example uniform random sampling, grid-based sampling, etc.)
-n_ics =           # TODO number of initial states to be checked
-x_0_arr =         # TODO matrix of the initial states to be checked (dim: n_ics x n)
+n_ics = 100          # TODO number of initial states to be checked
+
+possible_q = np.linspace(conf.lowerPositionLimit, conf.upperPositionLimit, num=10)
+possible_v = np.linspace(conf.lowerVelocityLimit, conf.upperVelocityLimit, num=10)
+x0_arr = np.zeros(n_ics, n)        # TODO matrix of the initial states to be checked (dim: n_ics x n)
 
 # Initialize viable and non-viable state lists
 viable_states = []
@@ -93,7 +96,7 @@ for i in range(int(n_ics)):
 
         print('{} is a viable x0 - final velocity: {:.3f} rad/s'.format(x0, X[-1,1]))
         # Save viable states
-        viable_states.append()         # TODO Save viable states
+        viable_states.append(x0)         # TODO Save viable states
 
         # SAVE THE RESULTS
         if(not os.path.exists(conf.DATA_FOLDER)) and conf.save_warm_start:
@@ -148,7 +151,7 @@ for i in range(int(n_ics)):
     else:
         print('{} is a non-viable x0'.format(x0))
         # Save non-viable states
-        no_viable_states.append()         # TODO Save non viable states
+        no_viable_states.append(x0)         # TODO Save non viable states
         
         
 
