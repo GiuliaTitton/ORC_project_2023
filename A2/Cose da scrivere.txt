@@ -1,0 +1,78 @@
+jacob 
+
+	df_dx = np.array([[0, 1], [self.g*np.cos(x[0]), 0]])        # TODO implement the Jacobian of the dynamics w.r.t. x
+	df_du = np.array([[0], [1]])        # TODO implement the Jacobian of the dynamics w.r.t. u
+
+single shooting
+
+
+	import A2_conf as conf
+
+
+	if(use_finite_diff):
+            cost_func = self.compute_cost_w_gradient_fd
+            # TODO Add the control bounds
+            r = minimize(cost_func, y0, jac=True, method=method, 
+                     callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True}, bounds=bnds,
+                     constraints=[
+                                     {'type': 'ineq', 
+                                      'fun': self.compute_ineq},
+                                      {'type': 'eq', 
+                                      'fun': self.compute_eq,
+                                      'jac': self.compute_eq_jac}
+                                      ])
+        else:
+            cost_func = self.compute_cost_w_gradient
+            # TODO Add the control bounds
+            r = minimize(cost_func, y0, jac=True, method=method, 
+                         callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': False}, bounds=bnds,
+                        constraints=[
+                                     {'type': 'ineq', 
+                                      'fun': self.compute_ineq,
+                                      'jac': self.compute_ineq_jac},
+                                      {'type': 'eq', 
+                                      'fun': self.compute_eq,
+                                      'jac': self.compute_eq_jac}
+                                      ])
+
+
+inequality constraints
+
+	ineq = np.concatenate((q-self.q_min, self.q_max-q, v-self.dq_min, self.dq_max-v))         # TODO implement the inequality 	constraint
+        
+	# compute Jacobian
+        nx = x.shape[0]
+        grad_x = np.zeros((2*nx, nx))
+        nq = self.nq
+        grad_x[:nq,       :nq] = np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[nq:2*nq,   :nq] = -np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[2*nq:3*nq, nq:] = np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[3*nq:,     nq:] = -np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+
+	---
+
+	ineq = np.concatenate((v+conf.eps_thr, conf.eps_thr-v))          # TODO implement the inequality constraint
+        
+        # compute Jacobian
+        nx = x.shape[0]
+        grad_x = np.zeros((2*nx, nx))
+        nq = self.nq
+        grad_x[:nq,       :nq] = np.zeros(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[nq:2*nq,   :nq] = np.zeros(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[2*nq:3*nq, nq:] = np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[3*nq:,     nq:] = -np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+
+
+cost function
+
+	de = v - self.v_des          # TODO implement penalty on the final velocity
+        cost = 0.5*self.weight_vel*de.dot(de)        # TODO implement penalty on the final velocity
+        grad = self.weight_vel*de        # TODO implement the gradient of the penalty on the final velocity
+
+	---
+
+	cost = 0.5*u.dot(u)        # TODO implement control regularization
+        grad_x = np.zeros(x.shape[0])        # TODO implement the gradient w.r.t. x of the control regularization
+        grad_u = u        # TODO implement the gradient w.r.t. u of the control regularization
+
+
