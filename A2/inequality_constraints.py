@@ -35,10 +35,10 @@ class OCPJointFinalBounds:
         nx = x.shape[0]
         grad_x = np.zeros((2*nx, nx))
         nq = self.nq
-        grad_x[:nq,       :nq] =  np.eye(nq)       # TODO implement the jacobian of the inequality constraint
-        grad_x[nq:2*nq,   :nq] =  -np.eye(nq)       # TODO implement the jacobian of the inequality constraint
-        grad_x[2*nq:3*nq, nq:] =  np.eye(nq)       # TODO implement the jacobian of the inequality constraint
-        grad_x[3*nq:,     nq:] =  -np.eye(nq)       # TODO implement the jacobian of the inequality constraint
+        grad_x[:nq,       :nq] = np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[nq:2*nq,   :nq] = -np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[2*nq:3*nq, nq:] = np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+        grad_x[3*nq:,     nq:] = -np.eye(nq)        # TODO implement the jacobian of the inequality constraint
 
         return (ineq, grad_x)
 

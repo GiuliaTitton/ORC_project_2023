@@ -31,10 +31,10 @@ upperControlBound    = 9.81         # upper bound joint torque
 
 activate_joint_bounds = 1           # joint pos/vel bounds
 
-activate_equilibrium_ineq = 0       # equilibrium constraint (inequality)
+activate_equilibrium_ineq = 1       # equilibrium constraint (inequality)
 eps_thr = 1e-7                      # threshold for equilibrium constraint (inequality)
 
-weight_eq_dq = 1e-2                    # final cost weight for joint velocities (to ensure an equilibrium is reached) - ex. 1e-2
+weight_eq_dq = 0                    # final cost weight for joint velocities (to ensure an equilibrium is reached) - ex. 1e-2
 dq_des_final = np.array([0])        # final desired joint velocity
 
 weight_u   = 1e-8                   # running cost weight for joint torques

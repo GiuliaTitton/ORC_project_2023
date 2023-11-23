@@ -20,8 +20,8 @@ class ODEPendulum(ODE):
         dx[1] = self.g*np.sin(x[0]) + u
 
         if(jacobian):
-            df_dx = np.array([[0, 1], [self.g*np.cos(x[0]), 0]])  # TODO implement the Jacobian of the dynamics w.r.t. x
-            df_du = np.array([[0], [1]])     # TODO implement the Jacobian of the dynamics w.r.t. u
+            df_dx = np.array([[0, 1], [self.g*np.cos(x[0]), 0]])        # TODO implement the Jacobian of the dynamics w.r.t. x
+            df_du = np.array([[0], [1]])        # TODO implement the Jacobian of the dynamics w.r.t. u
             return (dx, df_dx, df_du)
         
         return dx

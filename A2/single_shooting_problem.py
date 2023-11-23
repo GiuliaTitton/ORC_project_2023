@@ -5,7 +5,7 @@ from scipy.optimize import minimize
 #from colorama import Fore, Back, Style
 #from termcolor import colored, cprint
 
-from orc.optimal_control.A2.numerical_integration import Integrator
+from orc.A2.numerical_integration import Integrator
 
 class Empty:
     def __init__(self):

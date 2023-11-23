@@ -10,9 +10,9 @@ import orc.utils.plot_utils as plut
 import A2_conf as conf
 from single_shooting_problem import SingleShootingProblem
 
-from orc.optimal_control.A2.ode import ODEPendulum
-from orc.optimal_control.A2.cost_functions import OCPFinalCostState, OCPRunningCostQuadraticControl
-from orc.optimal_control.A2.inequality_constraints import OCPJointPathBounds, OCPJointFinalBounds, OCPVFinalBounds
+from orc.A2.ode import ODEPendulum
+from orc.A2.cost_functions import OCPFinalCostState, OCPRunningCostQuadraticControl
+from orc.A2.inequality_constraints import OCPJointPathBounds, OCPJointFinalBounds, OCPVFinalBounds
 
 np.set_printoptions(precision=3, linewidth=200, suppress=True)
 
@@ -26,18 +26,20 @@ nq, nv = conf.nq, conf.nv
 n = nq+nv                       # state size
 m = conf.nu                     # control size
 
-# TODO implement a search strategy to select n_ics initial states to be checked (for example uniform random sampling, grid-based sampling, etc.)
-n_ics = 100         # TODO number of initial states to be checked
-x0_arr = np.zeros((n_ics, n))       # TODO matrix of the initial states to be checked (dim: n_ics x n)
+GRID_NUM = 10
 
-possible_q = np.linspace(conf.lowerPositionLimit, conf.upperPositionLimit, num=10)
-possible_v = np.linspace(conf.lowerVelocityLimit, conf.upperVelocityLimit, num=10)
+# TODO implement a search strategy to select n_ics initial states to be checked (for example uniform random sampling, grid-based sampling, etc.)
+n_ics = GRID_NUM^2          # TODO number of initial states to be checked
+x0_arr = np.zeros((n_ics, n))        # TODO matrix of the initial states to be checked (dim: n_ics x n)
+
+possible_q = np.linspace(conf.lowerPositionLimit, conf.upperPositionLimit, num=GRID_NUM)
+possible_v = np.linspace(conf.lowerVelocityLimit, conf.upperVelocityLimit, num=GRID_NUM)
 
 j = k = 0
 for i in range(n_ics):
     x0_arr[i, :] = np.array([possible_q[j], possible_v[k]])
     k += 1
-    if (k == 10):
+    if (k == GRID_NUM):
         k = 0
         j += 1
 
