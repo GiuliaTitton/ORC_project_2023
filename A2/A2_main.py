@@ -26,20 +26,18 @@ nq, nv = conf.nq, conf.nv
 n = nq+nv                       # state size
 m = conf.nu                     # control size
 
-GRID_NUM = 10
-
 # TODO implement a search strategy to select n_ics initial states to be checked (for example uniform random sampling, grid-based sampling, etc.)
-n_ics = GRID_NUM^2          # TODO number of initial states to be checked
-x0_arr = np.zeros((n_ics, n))        # TODO matrix of the initial states to be checked (dim: n_ics x n)
+n_ics = 100         # TODO number of initial states to be checked
+x0_arr = np.zeros((n_ics, n))       # TODO matrix of the initial states to be checked (dim: n_ics x n)
 
-possible_q = np.linspace(conf.lowerPositionLimit, conf.upperPositionLimit, num=GRID_NUM)
-possible_v = np.linspace(conf.lowerVelocityLimit, conf.upperVelocityLimit, num=GRID_NUM)
+possible_q = np.linspace(conf.lowerPositionLimit, conf.upperPositionLimit, num=10)
+possible_v = np.linspace(conf.lowerVelocityLimit, conf.upperVelocityLimit, num=10)
 
 j = k = 0
 for i in range(n_ics):
     x0_arr[i, :] = np.array([possible_q[j], possible_v[k]])
     k += 1
-    if (k == GRID_NUM):
+    if (k == 10):
         k = 0
         j += 1
 

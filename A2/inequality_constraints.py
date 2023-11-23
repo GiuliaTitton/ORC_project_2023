@@ -22,15 +22,14 @@ class OCPJointFinalBounds:
         ''' Compute the cost given the state x '''
         q = x[:self.nq]
         v = x[self.nq:]
-        ineq = np.concatenate((q-self.q_min, self.q_max-q, v-self.dq_min, self.dq_max-v))        # implement the inequality constraint
+        ineq = ineq = np.concatenate((q-self.q_min, self.q_max-q, v-self.dq_min, self.dq_max-v))      # implement the inequality constraint
         return ineq
     
     def compute_w_gradient(self, x, recompute=True):
         ''' Compute the cost and its gradient given the final state x '''
         q = x[:self.nq]
         v = x[self.nq:]
-        ineq = np.concatenate((q-self.q_min, self.q_max-q, v-self.dq_min, self.dq_max-v))        # TODO implement the inequality constraint
-        
+        ineq = np.concatenate((q-self.q_min, self.q_max-q, v-self.dq_min, self.dq_max-v))  # TODO implement the inequality constraint
         # compute Jacobian
         nx = x.shape[0]
         grad_x = np.zeros((2*nx, nx))
@@ -58,15 +57,14 @@ class OCPVFinalBounds:
         ''' Compute the cost given the state x '''
         q = x[:self.nq]
         v = x[self.nq:]
-        ineq = np.concatenate((v+conf.eps_thr, conf.eps_thr-v))        # TODO implement the jacobian of the inequality constraint
+        ineq = np.concatenate((q-self.q_min, self.q_max-q, v-self.dq_min, self.dq_max-v))        # TODO implement the jacobian of the inequality constraint
         return ineq
     
     def compute_w_gradient(self, x, recompute=True):
         ''' Compute the cost and its gradient given the final state x '''
         q = x[:self.nq]
         v = x[self.nq:]
-        ineq = np.concatenate((v+conf.eps_thr, conf.eps_thr-v))         # TODO implement the inequality constraint
-        
+        ineq = np.concatenate((v+conf.eps_thr, conf.eps_thr-v)) # TODO implement the inequality constraint 
         # compute Jacobian
         nx = x.shape[0]
         grad_x = np.zeros((2*nx, nx))
@@ -75,6 +73,7 @@ class OCPVFinalBounds:
         grad_x[nq:2*nq,   :nq] = np.zeros(nq)        # TODO implement the jacobian of the inequality constraint
         grad_x[2*nq:3*nq, nq:] = np.eye(nq)        # TODO implement the jacobian of the inequality constraint
         grad_x[3*nq:,     nq:] = -np.eye(nq)        # TODO implement the jacobian of the inequality constraint
+
 
         return (ineq, grad_x)
 

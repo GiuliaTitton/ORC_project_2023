@@ -16,14 +16,14 @@ class OCPFinalCostState:
     def compute(self, x, recompute=True):
         ''' Compute the cost given the final state x '''
         v = x[self.nq:]
-        de = v - self.v_des        # TODO implement penalty on the final velocity
+        de = v - self.v_des          # TODO implement penalty on the final velocity
         cost = 0.5*self.weight_vel*de.dot(de)        # TODO implement penalty on the final velocity
         return cost
         
     def compute_w_gradient(self, x, recompute=True):
         ''' Compute the cost and its gradient given the final state x '''
         v = x[self.nq:]
-        de = v - self.v_des        # TODO implement penalty on the final velocity
+        de = v - self.v_des          # TODO implement penalty on the final velocity
         cost = 0.5*self.weight_vel*de.dot(de)        # TODO implement penalty on the final velocity
         grad = self.weight_vel*de        # TODO implement the gradient of the penalty on the final velocity
         return (cost, grad)
@@ -36,7 +36,7 @@ class OCPRunningCostQuadraticControl:
         
     def compute(self, x, u, t, recompute=True):
         ''' Compute the cost for a single time instant'''
-        cost = 0.5*u.dot(u)        # TODO implement control regularization
+        cost = 0.5*u.dot(u)# TODO implement control regularization
 
         return cost
         
