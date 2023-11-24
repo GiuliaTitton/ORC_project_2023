@@ -57,7 +57,7 @@ class OCPVFinalBounds:
         ''' Compute the cost given the state x '''
         q = x[:self.nq]
         v = x[self.nq:]
-        ineq = np.concatenate((q-self.q_min, self.q_max-q, v-self.dq_min, self.dq_max-v))        # TODO implement the jacobian of the inequality constraint
+        ineq = np.concatenate((v+conf.eps_thr, conf.eps_thr-v))        # TODO implement the jacobian of the inequality constraint
         return ineq
     
     def compute_w_gradient(self, x, recompute=True):
