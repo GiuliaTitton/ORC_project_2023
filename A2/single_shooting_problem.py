@@ -420,8 +420,8 @@ class SingleShootingProblem:
         if(use_finite_diff):
             cost_func = self.compute_cost_w_gradient_fd
             # TODO Add the control bounds
-            r = minimize(cost_func, y0, jac=True, method=method, 
-                     callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True},bounds=bnds,
+            r = minimize(cost_func, y0, jac=True, method=method, bounds=bnds,
+                     callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': True},
                      constraints=[
                                      {'type': 'ineq', 
                                       'fun': self.compute_ineq},
@@ -432,8 +432,8 @@ class SingleShootingProblem:
         else:
             cost_func = self.compute_cost_w_gradient
             # TODO Add the control bounds
-            r = minimize(cost_func, y0, jac=True, method=method, 
-                         callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': False},bounds=bnds,
+            r = minimize(cost_func, y0, jac=True, method=method, bounds=bnds,
+                         callback=self.clbk, tol=1e-6, options={'maxiter': max_iter, 'disp': False},
                         constraints=[
                                      {'type': 'ineq', 
                                       'fun': self.compute_ineq,
