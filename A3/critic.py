@@ -26,10 +26,10 @@ def get_critic(nx):
     inputs = layers.Input(shape=(nx,1))
     # Add normalization layer
     normalized_inputs = layers.LayerNormalization()(inputs)
-    state_out1 = layers.Dense(16, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(normalized_inputs) 
-    state_out2 = layers.Dense(32, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(state_out1) 
-    state_out3 = layers.Dense(64, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(state_out2) 
-    state_out4 = layers.Dense(64, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(state_out3)
+    state_out1 = layers.Dense(16, activation="relu")(normalized_inputs) 
+    state_out2 = layers.Dense(32, activation="relu")(state_out1) 
+    state_out3 = layers.Dense(64, activation="relu")(state_out2) 
+    state_out4 = layers.Dense(64, activation="relu")(state_out3)
     outputs = layers.Dense(1)(state_out4) 
     
     '''
