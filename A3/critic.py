@@ -20,7 +20,7 @@ def tf2np(y):
 
 def get_critic(nx):
     ''' Create the neural network to represent the Q function '''
-    weight_decay = 0.0009676325797855587
+    
     # OPTION 1
     
     inputs = layers.Input(shape=(nx,1))
@@ -53,6 +53,7 @@ def get_critic(nx):
     #OPTION 4 -> suggerimento di optuna
     
     '''
+    weight_decay = 0.0009676325797855587
     inputs = layers.Input(shape=(nx,1))
     normalized_inputs = layers.LayerNormalization()(inputs)
     state_out1 = layers.Dense(18, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(normalized_inputs) 
@@ -103,7 +104,6 @@ optimizer = tf.keras.optimizers.Adam(VALUE_LEARNING_RATE)
 
 # Instantiate a loss function.
 loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-#loss_fn = tf.math.reduce_mean(tf.math.square(target_values - V_value)) 
 
 # Prepare the metrics.
 train_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy()
