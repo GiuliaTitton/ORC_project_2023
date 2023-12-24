@@ -56,7 +56,7 @@ if __name__=="__main__":
     w_u = 0.5
     u_min = -1      # min control input
     u_max = 1       # max control input
-    N_OCP = 500     # number of OCPs (training episodes)
+    N_OCP = 20000     # number of OCPs (training episodes)
     plot = 1        # plot states-cost
 
 
@@ -71,6 +71,22 @@ if __name__=="__main__":
         print("OCP number ", i, "\n Initial state: ", sol.value(ocp.x[0]), "\n Cost: ", V[i])
     if plot:
         plt.plot(x_init, V)
+        plt.xlabel('Initial state')  
+        plt.ylabel('Cost')  
+        plt.title('Costs of OCPs starting from different initial states')     
+        plt.grid(True)  
         plt.show()
+    
+    #x_init_values = x_init.tolist()
+    #V_values = V.tolist()
+    
+    # Saving data to a Numpy .npz file
+    np.savez('results.npz', x_init=x_init, V=V)
+
+    # Loading data from a Numpy .npz file
+    data = np.load('results.npz')
+    x_init_values = data['x_init']
+    V_values = data['V']
+    
     print("INITIAL STATES: ", x_init)
     print("COSTS: ", V)
