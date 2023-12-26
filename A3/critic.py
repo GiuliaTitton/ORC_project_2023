@@ -41,7 +41,7 @@ def get_critic(nx):
     outputs = layers.Dense(1)(state_out2)
     '''
     
-    
+    '''
     #OPTION 3   -> migliore finora con batch di 15
     inputs = layers.Input(shape=(nx,1))
     normalized_inputs = layers.LayerNormalization()(inputs)
@@ -49,17 +49,17 @@ def get_critic(nx):
     state_out2 = layers.Dense(8, activation="relu")(state_out1) 
     state_out3 = layers.Dense(8, activation="relu")(state_out2)   
     outputs = layers.Dense(1)(state_out3)
-    
+    '''
     #OPTION 4 -> suggerimento di optuna
     
-    '''
+    
     inputs = layers.Input(shape=(nx,1))
-    normalized_inputs = layers.LayerNormalization()(inputs)
-    state_out1 = layers.Dense(16, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(normalized_inputs) 
+    #normalized_inputs = layers.LayerNormalization()(inputs)
+    state_out1 = layers.Dense(16, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(inputs) 
     state_out2 = layers.Dense(8, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(state_out1) 
     state_out3 = layers.Dense(8, activation="relu", kernel_regularizer=tf.keras.regularizers.l2(weight_decay))(state_out2) 
     outputs = layers.Dense(1)(state_out3) 
-    '''
+    
     
     model = tf.keras.Model(inputs, outputs)
 
@@ -89,10 +89,10 @@ def val_step(x_batch, V_batch):
     val_logits = V(x_batch, training=False)
     val_acc_metric.update_state(V_batch, val_logits)
 
-nx = 2
+nx = 1
 nu = 1
-VALUE_LEARNING_RATE = 1e-3
-#VALUE_LEARNING_RATE = 2.4e-5  #suggested by optuna
+#VALUE_LEARNING_RATE = 1e-3
+VALUE_LEARNING_RATE = 2.4e-5  #suggested by optuna
 
 # Create critic NNs
 V = get_critic(nx)
@@ -110,7 +110,7 @@ train_acc_metric = tf.keras.metrics.MeanSquaredError()
 val_acc_metric = tf.keras.metrics.MeanSquaredError()
 
 #prepare the training dataset
-num_epochs = 100
+num_epochs = 10
 batch_size = 25
 
 #x_train = data['x_init']
@@ -234,23 +234,6 @@ for i in range(len(w)):
     
 for i in range(len(w)):
     print("Norm V weights layer", i, np.linalg.norm(w[i]))
-    
-print("\nDouble the weights")
-for i in range(len(w)):
-    w[i] *= 2
-V.set_weights(w)
-
-w = V.get_weights()
-for i in range(len(w)):
-    print("Norm V weights layer", i, np.linalg.norm(w[i]))
 
 print("\nSave NN weights to file (in HDF5)")
 V.save_weights("weights.h5")
-
-print("Load NN weights from file\n")
-V.load_weights("weights.h5")
-
-w = V.get_weights()
-for i in range(len(w)):
-    print("Norm V weights layer", i, np.linalg.norm(w[i]))
-    
