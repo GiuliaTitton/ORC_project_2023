@@ -7,6 +7,7 @@ import pandas as pd
 data = np.load('results.npz')
 x_data = data['x_init']
 V_data = data['V']
+print(V_data)
 
 x_train = x_data[:16000]
 V_train = V_data[:16000]
@@ -16,8 +17,8 @@ V_test = V_data[16000:]
 train_dataset = tf.data.Dataset.from_tensor_slices((x_train, V_train))
 test_dataset = tf.data.Dataset.from_tensor_slices((x_test, V_test))
 
-BATCH_SIZE = 15
-EPOCHS=50
+BATCH_SIZE = 32
+EPOCHS=20
 SHUFFLE_BUFFER_SIZE = 100
 
 train_dataset = train_dataset.batch(BATCH_SIZE)
@@ -51,3 +52,5 @@ print("Predictions:", predictions)
 print("Evaluating model...")
 model.evaluate(x_test)
 
+#salva su file i valori predetti 
+np.savez('PredictionsForActor.npz', x_train=x_train, V_train=V_train)
