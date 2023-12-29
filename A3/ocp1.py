@@ -65,15 +65,24 @@ if __name__=="__main__":
     # solve OCP starting from different initial states
     x_init = np.linspace(-2.2, 2.0, N_OCP) # array of initial states
     V = np.zeros(N_OCP)                    # array of V(x0) for each initial state
+    u_optimal = np.zeros(N_OCP)
     for i in range(0, N_OCP):
         sol = ocp.solve(x_init[i], N)
         V[i] = sol.value(ocp.cost, [ocp.x==x_init[i]]) 
-        print("OCP number ", i, "\n Initial state: ", sol.value(ocp.x[0]), "\n Cost: ", V[i])
+        u_optimal[i] = sol.value(ocp.u)[0]
+        print("OCP number ", i, "\n Initial state: ", sol.value(ocp.x[0]), "\n Cost: ", V[i], "\n Optimal control: ", u_optimal[i])
     if plot:
         plt.plot(x_init, V)
         plt.xlabel('Initial state')  
         plt.ylabel('Cost')  
         plt.title('Costs of OCPs starting from different initial states')     
+        plt.grid(True)  
+        plt.show()
+
+        plt.plot(x_init, u_optimal)
+        plt.xlabel('Initial state')  
+        plt.ylabel('Optimal control')  
+        plt.title('Controls of OCPs starting from different initial states')     
         plt.grid(True)  
         plt.show()
     
