@@ -8,11 +8,18 @@ import pandas as pd
 data = np.load('resultsDoubleInt.npz')
 x_data = data['x_init']
 velocity_data = data['v_init']
+x_grid, vel_grid = np.meshgrid(x_data, velocity_data)
+states_data = np.stack((x_grid, vel_grid), axis=-1)
+states_data = states_data.reshape((-1, 2, 1))
 V_data = data['V']
+V_data = np.array(V_data).reshape((-1, 1))
+
+states_tensor = tf.convert_to_tensor(states_data, dtype=tf.float32)
+V_tensor = tf.convert_to_tensor(V_data, dtype=tf.float32)
 
 # Crea dataset e mescola i dati
-dataset = tf.data.Dataset.from_tensor_slices((x_data, velocity_data, V_data))
-dataset_shuffle = dataset.shuffle(buffer_size=20000)
+dataset = tf.data.Dataset.from_tensor_slices((states_tensor, V_tensor))
+dataset_shuffle = dataset.shuffle(buffer_size=70000)
 #for element in dataset_shuffle.as_numpy_iterator():
 #  print(element)
 
@@ -26,66 +33,49 @@ start_index_val = 14000
 val_dataset = dataset_shuffle.skip(start_index_val).take(3000)
 
 # Estrai x_train e V_train come numpy array
-x_train = []
-velocity_train = []
+states_train = []
 V_train = []
 
-for x, velocity, V in train_dataset:
-    x_train.append(x.numpy())
-    velocity_train.append(velocity.numpy())
+for state, V in train_dataset:
+    states_train.append(state.numpy())
     V_train.append(V.numpy())
 
-x_train = np.array(x_train)
-velocity_train = np.array(velocity_train)
+states_train = np.array(states_train)
 V_train = np.array(V_train)
 
 # Estrai x_val e V_val come numpy array
-x_val = []
-velocity_val = []
+states_val = []
 V_val = []
 
-for x, vel, V in val_dataset:
-    x_val.append(x.numpy())
-    velocity_val.append(vel.numpy())
+for state, V in val_dataset:
+    states_val.append(state.numpy())
     V_val.append(V.numpy())
 
-x_val = np.array(x_val)
-velocity_val = np.array(velocity_val)
+states_val = np.array(states_val)
 V_val = np.array(V_val)
 
 # Estrai x_test e V_test come numpy array
-x_test = []
-velocity_test = []
+states_test = []
 V_test = []
 
-for x, vel, V in test_dataset:
-    x_test.append(x.numpy())
-    velocity_test.append(vel.numpy())
+for state, V in test_dataset:
+    states_test.append(state.numpy())
     V_test.append(V.numpy())
 
-x_test = np.array(x_test)
-velocity_test = np.array(velocity_test)
+states_test = np.array(states_test)
 V_test = np.array(V_test)
 
+# Costruisci il modello
 nx = 2
-
-# Define input layers
-input_x = tf.keras.layers.Input(shape=(1,))
-input_velocity = tf.keras.layers.Input(shape=(1,))
-
-# Combine inputs using Concatenate layer
-concatenated = tf.keras.layers.Concatenate()([input_x, input_velocity])
-#normalization layer
-normalized = tf.keras.layers.Normalization()(concatenated)
-# Dense layers (with multi input it is suggested this configuration: 64->32->16)
-dense1 = tf.keras.layers.Dense(64, activation='relu')(normalized)
-dense2 = tf.keras.layers.Dense(32, activation='relu')(dense1)
-dense3 = tf.keras.layers.Dense(16, activation='relu')(dense2)
-# Output layer
-output = tf.keras.layers.Dense(1)(dense3)
-
-# Create model using defined inputs and output
-model = tf.keras.models.Model(inputs=[input_x, input_velocity], outputs=output)
+model = tf.keras.models.Sequential([
+  tf.keras.layers.Flatten(input_shape=(nx, 1)),
+  tf.keras.layers.Dense(128, activation='relu'),
+  tf.keras.layers.Dense(64, activation='relu'),
+  tf.keras.layers.Dense(32, activation='relu'),
+  tf.keras.layers.Dense(32, activation='relu'),
+  tf.keras.layers.Dense(64, activation='relu'),
+  tf.keras.layers.Dense(1)
+])
 model.summary()
 
 print("Compiling model...")
@@ -94,26 +84,42 @@ model.compile(optimizer=tf.keras.optimizers.Adam(),
               metrics=['mse'])  # Use mse for evaluation
 print("Model compiled successfully")
 
-# Allena e valuta il modello ->100,32  ->100,64
+# Allena e valuta il modello 
 EPOCHS = 100
 BATCH_SIZE = 32 
 
 print("Fitting model...")
-history = model.fit((x_train, velocity_train), V_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=((x_val, velocity_val), V_val))
+history = model.fit(states_train, V_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(states_val, V_val))
 
 print("Making predictions...")
-predictions = model.predict([x_test, velocity_test])
+predictions = model.predict(states_test)
 print("Predictions:", predictions)
 
-prediction_tot_dataset = model.predict([x_data, velocity_data])
-plt.plot(prediction_tot_dataset)
-plt.xlabel('Prediction sample')  
-plt.ylabel('Predicted value')  
-plt.title('Predictions on the whole dataset')     
-plt.grid(True)   
-plt.show()  
+prediction_tot_dataset = model.predict(states_data)
+predictions_reshaped = prediction_tot_dataset.reshape(x_grid.shape)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+surf = ax.plot_surface(x_grid, vel_grid, predictions_reshaped, cmap='viridis')
+ax.set_xlabel('Initial position')
+ax.set_ylabel('Initial velocity')
+ax.set_zlabel('Predicted cost')
+ax.set_title('Critic predictions')
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+plt.show()
+
+V_data_reshaped = V_data.reshape(x_grid.shape)
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+surf = ax.plot_surface(x_grid, vel_grid, V_data_reshaped, cmap='viridis')
+ax.set_xlabel('Initial position')
+ax.set_ylabel('Initial velocity')
+ax.set_zlabel('OCP cost')
+ax.set_title('OCP cost')
+fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
+plt.show()
 
 #salva su file i valori predetti 
 np.savez('PredictionsForActor.npz', prediction_tot_dataset)
 
+# Salva il modello
 model.save('model_critic_doubleIntegrator')

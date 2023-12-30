@@ -59,7 +59,7 @@ if __name__=="__main__":
     w_u = 0.5
     u_min = -5      # min control input
     u_max = 5       # max control input
-    N_OCP = 20000     # number of OCPs (training episodes)
+    N_OCP = 250     # sqrt of number of OCPs (training episodes)
     plot = 1        # plot states-cost
 
 
@@ -69,44 +69,47 @@ if __name__=="__main__":
     x_init = np.linspace(-2.2, 2.0, N_OCP) # array of initial states
     v_init = np.linspace(-1.0, 1.0, N_OCP) # array of initial velocities
     #v_init = np.random.uniform(low=0, high=10, size=N_OCP)
-    V = np.zeros(N_OCP)                    # array of V(x0) for each initial state
-    u_optimal = np.zeros(N_OCP)
+    V = np.zeros((N_OCP, N_OCP))                    # array of V(x0) for each initial state
     for i in range(0, N_OCP):
-        sol = ocp.solve(x_init[i],v_init[i], N)
-        #V[i] = sol.value(ocp.cost[0], [ocp.x[i,:] == [x_init[i], v_init[i]]])
-        V[i] = sol.value(ocp.cost)
-        u_optimal[i] = sol.value(ocp.u)[0]
-        
-        print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V[i], "\n Optimal control: ", u_optimal[i])
+        for j in range(0, N_OCP):
+            sol = ocp.solve(x_init[i],v_init[j], N)
+            V[i,j] = sol.value(ocp.cost)
+            # , [ocp.x==[x_init[i], v_init[j]]]
+            
+            print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V[i,j])
     if plot:
-        '''
-        plt.plot(x_init, v_init)
+        '''plt.plot(x_init, v_init)
         plt.xlabel('Initial position')  
         plt.ylabel('Initial velocity')  
         plt.title('Velocity profile')     
         plt.grid(True)  
-        plt.show()'''
+        plt.show()
         
         plt.plot(x_init, V)
         plt.xlabel('Initial state')  
         plt.ylabel('Cost')  
         plt.title('Costs of OCPs starting from different initial states')     
         plt.grid(True)  
-        plt.show()
-        
-        plt.plot(x_init, u_optimal)
-        plt.xlabel('Initial state')  
-        plt.ylabel('Optimal control')  
-        plt.title('Controls of OCPs starting from different initial states')     
+        plt.show()'''
+        '''
+        plt.plot(v_init, V)
+        plt.xlabel('Initial velocity')  
+        plt.ylabel('Cost')  
+        plt.title('Costs of OCPs starting from different initial velocities')     
         plt.grid(True)  
+        plt.show()'''
+
+        # Create a 3D plot
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        X, Y = np.meshgrid(x_init, v_init)
+        ax.plot_surface(X, Y, V, cmap='viridis')
+        ax.set_xlabel('Initial position')
+        ax.set_ylabel('Initial velocity')
+        ax.set_zlabel('Cost')
+        ax.set_title('Cost of the OCPs')
         plt.show()
-        
-        plt.plot(v_init, u_optimal)
-        plt.xlabel('Initial state')  
-        plt.ylabel('Optimal control')  
-        plt.title('Controls of OCPs starting from different initial states')     
-        plt.grid(True)  
-        plt.show()
+
     
     #x_init_values = x_init.tolist()
     #V_values = V.tolist()
