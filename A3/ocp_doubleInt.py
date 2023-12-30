@@ -57,8 +57,8 @@ if __name__=="__main__":
     N = 10          # horizon size
     dt = 0.1        # time step
     w_u = 0.5
-    u_min = -1      # min control input
-    u_max = 1       # max control input
+    u_min = -5      # min control input
+    u_max = 5       # max control input
     N_OCP = 20000     # number of OCPs (training episodes)
     plot = 1        # plot states-cost
 
@@ -67,13 +67,14 @@ if __name__=="__main__":
 
     # solve OCP starting from different initial states
     x_init = np.linspace(-2.2, 2.0, N_OCP) # array of initial states
-    v_init = np.linspace(-2.2, 2.0, N_OCP) # array of initial velocities
+    v_init = np.linspace(-1.0, 1.0, N_OCP) # array of initial velocities
     #v_init = np.random.uniform(low=0, high=10, size=N_OCP)
     V = np.zeros(N_OCP)                    # array of V(x0) for each initial state
     for i in range(0, N_OCP):
         sol = ocp.solve(x_init[i],v_init[i], N)
         #V[i] = sol.value(ocp.cost[0], [ocp.x[i,:] == [x_init[i], v_init[i]]])
         V[i] = sol.value(ocp.cost)
+        
         print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V[i])
     if plot:
         plt.plot(x_init, v_init)
@@ -89,13 +90,13 @@ if __name__=="__main__":
         plt.title('Costs of OCPs starting from different initial states')     
         plt.grid(True)  
         plt.show()
-        
+        '''
         plt.plot(v_init, V)
         plt.xlabel('Initial velocity')  
         plt.ylabel('Cost')  
         plt.title('Costs of OCPs starting from different initial velocities')     
         plt.grid(True)  
-        plt.show()
+        plt.show()'''
     
     #x_init_values = x_init.tolist()
     #V_values = V.tolist()
@@ -110,4 +111,5 @@ if __name__=="__main__":
     V_values = data['V']
     
     print("INITIAL STATES: ", x_init)
+    print("INITIAL VELOCITITES: ", v_init)
     print("COSTS: ", V)
