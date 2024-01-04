@@ -153,4 +153,4 @@ fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 plt.show()
 
 #salva su file i valori predetti 
-np.savez('PredictionsForActor.npz', prediction_tot_dataset)
+#np.savez('PredictionsForActor.npz', prediction_tot_dataset)
