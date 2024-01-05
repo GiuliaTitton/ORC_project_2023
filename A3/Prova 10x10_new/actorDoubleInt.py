@@ -7,8 +7,6 @@ import time
 data = np.load('resultsDoubleInt.npz')
 x_data = data['x_init']
 velocity_data = data['v_init']
-print(f"x_data shape={x_data.shape}")
-print(f"velocity_data shape={velocity_data.shape}")
 x_grid, vel_grid = np.meshgrid(x_data, velocity_data)
 states_data = np.stack((x_grid, vel_grid), axis=-1)
 states_data = states_data.reshape((-1, 2, 1))
@@ -36,56 +34,58 @@ def l(x,u):
 
 # Crea input per l'actor minimizzando Q
 
+start_time=time.time()
+
 pi = np.zeros(len(states_data))
 print("Computing pi ...")
-
-#get starting time 
-start_time_policy = time.time()
-
 # For each initial state
 for i in range(len(states_data)):
     x_next = np.zeros(len(u_vector))
     v_next = np.zeros(len(u_vector))
     # Find possible x_next, v_next depending on u
     for j in range(len(u_vector)):
-        x_next[j] = states_data[i, 0, 0] + dt * states_data[i, 1, 0] + 0.5 * (dt**2) * u_vector[j]
-        v_next[j] = states_data[i, 1, 0] + dt * u_vector[j]
+        x_next[j] = states_data[i, 0, 0] + dt*states_data[i, 1, 0] + 0.5 * (dt**2) * u_vector[j]
+        v_next[j] = states_data[i, 1, 0] + dt*u_vector[j]
     # Predict V(x_next) for each possible u
-    states_next = np.column_stack((x_next, v_next))
+    x_grid_next, vel_grid_next = np.meshgrid(x_next, v_next)
+    states_next = np.stack((x_grid_next, vel_grid_next), axis=-1)
     states_next = states_next.reshape((-1, 2, 1))
     V_pred_dataset = model_critic.predict(states_next, verbose=0)
     # Transform V_pred from dataset to numpy array
     V_pred = np.array(V_pred_dataset)
     V_pred = V_pred.flatten()
-
+    #print(f"V_pred={V_pred}")
     # Find greedy policy minimizing Q
     Q = np.zeros(len(u_vector))
     for j in range(len(u_vector)):
         Q[j] = l(states_data[i, 0, 0], u_vector[j]) + V_pred[j]
+    #print(f"Q={Q}")
     pi_pos = np.argmin(Q)
-    pi[i] = u_vector[pi_pos] 
+    pi[i] = u_vector[pi_pos]
+    if i%10==0:
+        print(f"iteration {i}/{len(states_data)}") 
 
-#get final time for training and testing
-final_time_policy = time.time()
-#compute the elapsed time (= time taken for training critic network)
-elapsed_time_policy = final_time_policy - start_time_policy
-print(f"Time taken for computing policy: {elapsed_time_policy}")
+end_time=time.time()
+elapsed_time=end_time-start_time
+print(f"Elapsed time for compiting pi={elapsed_time}")
 
 # Crea dataset e mescola i dati
 states_tensor = tf.convert_to_tensor(states_data, dtype=tf.float32)
 pi_tensor = tf.convert_to_tensor(pi, dtype=tf.float32)
 
 dataset = tf.data.Dataset.from_tensor_slices((states_tensor, pi_tensor))
-dataset_shuffle = dataset.shuffle(buffer_size=10500)
+dataset_shuffle = dataset.shuffle(buffer_size=500)
+#for element in dataset_shuffle.as_numpy_iterator():
+#  print(element)
 
 # Crea train, test e validation dataset 
-train_dataset = dataset_shuffle.take(7000)
+train_dataset = dataset_shuffle.take(70)
 
-start_index_test = 8500
-test_dataset = dataset_shuffle.skip(start_index_test).take(1500)
+start_index_test = 85
+test_dataset = dataset_shuffle.skip(start_index_test).take(15)
 
-start_index_val = 7000
-val_dataset = dataset_shuffle.skip(start_index_val).take(1500)
+start_index_val = 70
+val_dataset = dataset_shuffle.skip(start_index_val).take(15)
 
 # Estrai x_train e V_train come numpy array
 states_train = []
@@ -133,7 +133,6 @@ model = tf.keras.models.Sequential([
 ])
 model.summary()
 
-start_time = time.time()
 
 print("Compiling model...")
 model.compile(optimizer=tf.keras.optimizers.Adam(),
@@ -145,22 +144,22 @@ print("Model compiled successfully")
 EPOCHS = 200
 BATCH_SIZE = 32 
 
+print("Shape of states_train:", states_train.shape)
+print("Shape of pi_train:", pi_train.shape)
+
 print("Fitting model...")
 history = model.fit(states_train, pi_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(states_val, pi_val))
 
 print("Making predictions...")
 predictions = model.predict(states_test)
-#print("Predictions:", predictions)
+print("Predictions:", predictions)
 
 prediction_tot_dataset = model.predict(states_data)
-
-#get final time for training and testing
-final_time = time.time()
-#compute the elapsed time (= time taken for training critic network)
-elapsed_time = final_time - start_time
-print(f"Time taken for training actor network: {elapsed_time}")
-
 predictions_reshaped = prediction_tot_dataset.reshape(x_grid.shape)
+
+#salva su file i valori predetti 
+np.savez('ActorResults.npz', prediction_tot_dataset=prediction_tot_dataset)
+
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 surf = ax.plot_surface(x_grid, vel_grid, predictions_reshaped, cmap='viridis')
@@ -171,8 +170,5 @@ ax.set_title('Actor predictions')
 fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 plt.show()
 
-#salva su file i valori predetti 
-np.savez('ActorResults.npz', prediction_tot_dataset)
-data = np.load('ActorResults.npz')
-print(f"Prediction tot dataset: {prediction_tot_dataset}")
-print(prediction_tot_dataset.shape)
+
+
