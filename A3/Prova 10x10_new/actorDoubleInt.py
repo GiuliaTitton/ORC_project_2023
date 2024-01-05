@@ -158,7 +158,7 @@ prediction_tot_dataset = model.predict(states_data)
 predictions_reshaped = prediction_tot_dataset.reshape(x_grid.shape)
 
 #salva su file i valori predetti 
-np.savez('ActorResults.npz', prediction_tot_dataset=prediction_tot_dataset)
+np.savez('ActorResults.npz', prediction_tot_dataset=prediction_tot_dataset, states_data=states_data)
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')

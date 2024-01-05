@@ -1,10 +1,9 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import time
 
-
-# Carica set di dati
+# load data
 data = np.load('resultsDoubleInt.npz')
 x_data = data['x_init']
 velocity_data = data['v_init']
@@ -78,6 +77,8 @@ model = tf.keras.models.Sequential([
 ])
 model.summary()
 
+start_time=time.time()
+
 print("Compiling model...")
 model.compile(optimizer=tf.keras.optimizers.Adam(),
               loss='mse',  # Use mean squared error for regression
@@ -85,7 +86,7 @@ model.compile(optimizer=tf.keras.optimizers.Adam(),
 print("Model compiled successfully")
 
 # Allena e valuta il modello 
-EPOCHS = 500
+EPOCHS = 50
 BATCH_SIZE = 32 
 
 print("Fitting model...")
@@ -94,6 +95,9 @@ history = model.fit(states_train, V_train, epochs=EPOCHS, batch_size=BATCH_SIZE,
 print("Making predictions...")
 predictions = model.predict(states_test)
 #print("Predictions:", predictions)
+
+end_time=time.time()
+print(f"Elapsed time in learning critic={end_time-start_time} seconds")
 
 prediction_tot_dataset = model.predict(states_data)
 predictions_reshaped = prediction_tot_dataset.reshape(x_grid.shape)

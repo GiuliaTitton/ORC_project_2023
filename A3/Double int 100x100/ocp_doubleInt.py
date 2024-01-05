@@ -77,7 +77,8 @@ if __name__=="__main__":
             V[i,j] = sol.value(ocp.cost)
             # , [ocp.x==[x_init[i], v_init[j]]]
             u_optimal[i, j] = sol.value(ocp.u)[0]
-            print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V[i,j])
+            if j%20==0:
+                print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V[i,j])
     if plot:
         '''plt.plot(x_init, v_init)
         plt.xlabel('Initial position')  

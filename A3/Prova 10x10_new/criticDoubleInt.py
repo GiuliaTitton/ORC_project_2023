@@ -1,6 +1,7 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
+import time
 
 # Carica set di dati
 data = np.load('resultsDoubleInt.npz')
@@ -86,12 +87,17 @@ print("Model compiled successfully")
 EPOCHS = 1000
 BATCH_SIZE = 32 
 
+start_time=time.time()
+
 print("Fitting model...")
 history = model.fit(states_train, V_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(states_val, V_val))
 
 print("Making predictions...")
 predictions = model.predict(states_test)
 print("Predictions:", predictions)
+
+end_time=time.time() 
+print(f"Elapsed time={end_time-start_time} seconds ")
 
 prediction_tot_dataset = model.predict(states_data)
 predictions_reshaped = prediction_tot_dataset.reshape(x_grid.shape)

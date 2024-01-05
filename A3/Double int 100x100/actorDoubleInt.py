@@ -1,7 +1,7 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import time
 
 # Carica states_data
 data = np.load('resultsDoubleInt.npz')
@@ -33,7 +33,7 @@ def l(x,u):
     return cost
 
 # Crea input per l'actor minimizzando Q
-
+start_time=time.time()
 pi = np.zeros(len(states_data))
 print("Computing pi ...")
 
@@ -59,7 +59,11 @@ for i in range(len(states_data)):
         Q[j] = l(states_data[i, 0, 0], u_vector[j]) + V_pred[j]
     pi_pos = np.argmin(Q)
     pi[i] = u_vector[pi_pos] 
+    if i%50==0:
+        print(f"iteration: {i}/{len(states_data)}")
 
+end_time=time.time() 
+print(f"Elapsed time for calculating pi: {end_time-start_time} seconds")
 # Crea dataset e mescola i dati
 states_tensor = tf.convert_to_tensor(states_data, dtype=tf.float32)
 pi_tensor = tf.convert_to_tensor(pi, dtype=tf.float32)
@@ -122,6 +126,7 @@ model = tf.keras.models.Sequential([
 ])
 model.summary()
 
+start_time_train = time.time()
 
 print("Compiling model...")
 model.compile(optimizer=tf.keras.optimizers.Adam(),
@@ -130,7 +135,7 @@ model.compile(optimizer=tf.keras.optimizers.Adam(),
 print("Model compiled successfully")
 
 # Allena e valuta il modello 
-EPOCHS = 200
+EPOCHS = 10
 BATCH_SIZE = 32 
 
 print("Fitting model...")
@@ -139,6 +144,9 @@ history = model.fit(states_train, pi_train, epochs=EPOCHS, batch_size=BATCH_SIZE
 print("Making predictions...")
 predictions = model.predict(states_test)
 #print("Predictions:", predictions)
+
+end_time_train=time.time()
+print(f"Elapsed time in training actor: {end_time_train-start_time_train} seconds")
 
 prediction_tot_dataset = model.predict(states_data)
 predictions_reshaped = prediction_tot_dataset.reshape(x_grid.shape)
@@ -153,7 +161,7 @@ fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 plt.show()
 
 #salva su file i valori predetti 
-np.savez('ActorResults.npz', prediction_tot_dataset)
-data = np.load('ActorResults.npz')
-print(f"Prediction tot dataset: {prediction_tot_dataset}")
-print(prediction_tot_dataset.shape)
+np.savez('ActorResults.npz', prediction_tot_dataset=prediction_tot_dataset, states_data=states_data)
+
+#print(f"Prediction tot dataset: {prediction_tot_dataset}")
+#print(prediction_tot_dataset.shape)

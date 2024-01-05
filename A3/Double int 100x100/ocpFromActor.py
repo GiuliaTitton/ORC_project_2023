@@ -56,8 +56,8 @@ if __name__=="__main__":
     import matplotlib.pyplot as plt
     #load file with actor results
     data = np.load('ActorResults.npz')
-    control_from_actor=data['arr_0']
-    print(control_from_actor)
+    control_from_actor=data['prediction_tot_dataset']
+    states_data=data['states_data']
     
     N = 10          # horizon size
     dt = 0.1        # time step
@@ -81,9 +81,10 @@ if __name__=="__main__":
             V[i,j] = sol.value(ocp.cost)
             # , [ocp.x==[x_init[i], v_init[j]]]
             u_optimal[i, j] = sol.value(ocp.u)[0]
-            print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]),"\n Cost: ", V[i,j])
-    print(f"Array of costs from OCP: {V}")
-    print(f"Mean cost of OCP: {np.mean(V)}")
+            if j%50==0:
+                print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]),"\n Cost: ", V[i,j])
+    #print(f"Array of costs from OCP: {V}")
+    #print(f"Mean cost of OCP: {np.mean(V)}")
     if plot:
 
         # Create a 3D plot
@@ -108,19 +109,46 @@ if __name__=="__main__":
         ax.set_title('Controls of OCPs starting from different initial states')
         plt.show()
 
-    
-    #x_init_values = x_init.tolist()
-    #V_values = V.tolist()
-    
     # Saving data to a Numpy .npz file
-    np.savez('ocpAfterActor.npz', x_init=x_init, v_init=v_init, V=V)
-
-    # Loading data from a Numpy .npz file
-    data = np.load('ocpAfterActor.npz')
-    x_init_values = data['x_init']
-    v_init_values = data['v_init']
-    V_values = data['V']
+    np.savez('ocpAfterActorFromPredictions.npz', x_init=x_init, v_init=v_init, V=V)
     
     print("INITIAL STATES: ", x_init)
     print("INITIAL VELOCITITES: ", v_init)
     print("COSTS: ", V)
+    
+    #-------------CASE 2----------------#
+    #we start from actor's initial guesses
+    V = np.zeros((N_OCP, N_OCP))   # array of V(x0) for each initial state
+    u_optimal = np.zeros((N_OCP, N_OCP))
+    for i in range(0, N_OCP):
+        for j in range(0, N_OCP):
+            sol = ocp.solve(x_init[i],v_init[j], N, states_data)
+            V[i,j] = sol.value(ocp.cost)
+            # , [ocp.x==[x_init[i], v_init[j]]]
+            u_optimal[i, j] = sol.value(ocp.u)[0]
+            if j%50==0:
+                print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]),"\n Cost: ", V[i,j])
+    if plot:
+
+        # Create a 3D plot
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        X, Y = np.meshgrid(x_init, v_init)
+        ax.plot_surface(X, Y, V, cmap='viridis')
+        ax.set_xlabel('Initial position')
+        ax.set_ylabel('Initial velocity')
+        ax.set_zlabel('Cost')
+        ax.set_title('Cost of the OCPs starting from Actor initial states')
+        plt.show()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        X, Y = np.meshgrid(x_init, v_init)
+        u_opt_reshaped = u_optimal.reshape(X.shape)
+        ax.plot_surface(X, Y, u_opt_reshaped, cmap='viridis')
+        ax.set_xlabel('Initial position')
+        ax.set_ylabel('Initial velocity')
+        ax.set_zlabel('Optimal control')
+        ax.set_title('Controls of OCPs starting from different initial states (from actor guesses)')
+        plt.show()
+    np.savez('ocpAfterActorFromGuesses.npz', x_init=x_init, v_init=v_init, V=V)
