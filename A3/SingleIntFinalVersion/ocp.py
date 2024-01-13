@@ -65,12 +65,14 @@ if __name__=="__main__":
     # solve OCP starting from different initial states
     x_init = np.linspace(-2.2, 2.0, N_OCP) # array of initial states
     V = np.zeros(N_OCP)                    # array of V(x0) for each initial state
-    u_optimal = np.zeros(N_OCP)
+    u_optimal = np.zeros((N_OCP, N))
+    x_traj = np.zeros((N_OCP, N+1))
     for i in range(0, N_OCP):
         sol = ocp.solve(x_init[i], N)
         V[i] = sol.value(ocp.cost, [ocp.x==x_init[i]]) 
-        u_optimal[i] = sol.value(ocp.u)[0]
-        print("OCP number ", i, "\n Initial state: ", sol.value(ocp.x[0]), "\n Cost: ", V[i], "\n Optimal control: ", u_optimal[i])
+        u_optimal[i,:] = sol.value(ocp.u)
+        x_traj[i,:] = sol.value(ocp.x)
+        print("OCP number ", i, "\n Initial state: ", sol.value(ocp.x[0]), "\n Cost: ", V[i], "\n Optimal control: ", u_optimal[i,:])
     if plot:
         plt.plot(x_init, V)
         plt.xlabel('Initial state')  
@@ -79,10 +81,44 @@ if __name__=="__main__":
         plt.grid(True)  
         plt.show()
 
-        plt.plot(x_init, u_optimal)
+        # Plot for all states from t = 0 to N
+        plt.plot(x_init, x_traj[:,0])
         plt.xlabel('Initial state')  
-        plt.ylabel('Optimal control')  
-        plt.title('Controls of OCPs starting from different initial states')     
+        plt.ylabel('State')  
+        plt.title('States of OCPs starting from different initial states')     
+        plt.grid(True)  
+        plt.show()
+        for i in range(N):
+            
+            # Plot states
+            plt.plot(x_init, x_traj[:,i+1])
+            plt.xlabel('Initial state')  
+            plt.ylabel('State')  
+            plt.title('States of OCPs starting from different initial states')     
+            plt.grid(True)  
+            plt.show()
+
+            # Plot control
+            plt.plot(x_init, u_optimal[:,i])
+            plt.xlabel('Initial state')  
+            plt.ylabel('Optimal control')  
+            plt.title('Controls of OCPs starting from different initial states')     
+            plt.grid(True)  
+            plt.show()
+
+        # Plot trajectory of state 5000
+        plt.plot(x_traj[5000,:])
+        plt.xlabel('Time step')  
+        plt.ylabel('State')  
+        plt.title('State trajectory')     
+        plt.grid(True)  
+        plt.show()
+
+        # Plot trajectory of state 7500
+        plt.plot(x_traj[7500,:])
+        plt.xlabel('Time step')  
+        plt.ylabel('State')  
+        plt.title('State trajectory')        
         plt.grid(True)  
         plt.show()
     

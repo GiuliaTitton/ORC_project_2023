@@ -131,6 +131,22 @@ if __name__=="__main__":
             plt.grid(True)  
             plt.show()
 
+        # Plot trajectory of state 500
+        plt.plot(X[500,:])
+        plt.xlabel('Time step')  
+        plt.ylabel('State')  
+        plt.title('State trajectory')     
+        plt.grid(True)  
+        plt.show()
+
+        # Plot trajectory of state 750
+        plt.plot(X[750,:])
+        plt.xlabel('Time step')  
+        plt.ylabel('State')  
+        plt.title('State trajectory')        
+        plt.grid(True)  
+        plt.show()
+
     # ------------CASE 2-------------
     # OCP solution with actor predictions as initial guess (both states and control)
 
@@ -181,5 +197,20 @@ if __name__=="__main__":
             plt.title('Controls of OCPs with initial guess from actor')     
             plt.grid(True)  
             plt.show()
-  
+
+        # Plot trajectory of state 500
+        plt.plot(x_traj[500,:])
+        plt.xlabel('Time step')  
+        plt.ylabel('State')  
+        plt.title('State trajectory')     
+        plt.grid(True)  
+        plt.show()
+
+        # Plot trajectory of state 750
+        plt.plot(x_traj[750,:])
+        plt.xlabel('Time step')  
+        plt.ylabel('State')  
+        plt.title('State trajectory')        
+        plt.grid(True)  
+        plt.show()
     
