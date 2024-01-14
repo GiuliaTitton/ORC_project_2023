@@ -87,7 +87,6 @@ history = model.fit(x_train, pi_train, epochs=EPOCHS, batch_size=BATCH_SIZE, val
 # Test the model
 print("Making predictions...")
 predictions = model.predict(x_test)
-print("Predictions:", predictions)
 
 # Make predictions on the whole dataset
 prediction_tot_dataset = model.predict(x_data)

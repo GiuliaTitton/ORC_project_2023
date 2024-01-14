@@ -124,11 +124,6 @@ if __name__=="__main__":
     
     # Saving data to a Numpy .npz file
     np.savez('results.npz', x_init=x_init, V=V)
-
-    # Loading data from a Numpy .npz file
-    data = np.load('results.npz')
-    x_init_values = data['x_init']
-    V_values = data['V']
     
     print("INITIAL STATES: ", x_init)
     print("COSTS: ", V)
