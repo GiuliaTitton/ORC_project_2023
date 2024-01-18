@@ -62,7 +62,6 @@ if __name__=="__main__":
     N_OCP = 20     # sqrt of number of OCPs (training episodes)
     plot = 1        # plot states-cost
 
-
     # Initial states
     x_init = np.linspace(-2.2, 2.0, N_OCP) # array of initial states
     v_init = np.linspace(-1.0, 1.0, N_OCP) # array of initial velocities
@@ -71,44 +70,54 @@ if __name__=="__main__":
     # Load actor model
     model_actor = tf.keras.models.load_model('model_actor_double')
 
-    # Load actor predictions
-    data = np.load('PredictionsForOCP_double.npz')
-    control_from_actor = data['prediction_tot_dataset']
-    contr = np.array(control_from_actor).flatten()
 
     # ------------CASE 1-------------
     # System directly controlled by actor predictions
     
-    # Calculate states and controls based on actor predictions
-    X = np.zeros((N_OCP, N_OCP, N+1, 2))
-    U = np.zeros((N_OCP, N_OCP, N))
+    # First step
+    X = np.zeros((N_OCP,N_OCP,N+1))
+    V = np.zeros((N_OCP,N_OCP,N+1))
+    U = np.zeros((N_OCP,N_OCP,N))
     V_direct = np.zeros((N_OCP, N_OCP))
     for i in range(N_OCP):
         for j in range(N_OCP):
-            X[i,j,0,0] = x_init[i]
-            X[i,j,0,1] = v_init[j] 
-            state = np.array([[x_init[i], v_init[j]]]).reshape((1,2,1))
-            u_pred = model_actor.predict(state, verbose=0)
-            u = np.array(u_pred)
-            U[i,j,0] = u # first control to be applied
-            for k in range(N):
-                V_direct[i,j] = V_direct[i,j] + (X[i,j,k,0]-1.9)*(X[i,j,k,0]-1.0)*(X[i,j,k,0]-0.6)*(X[i,j,k,0]+0.5)*(X[i,j,k,0]+1.2)*(X[i,j,k,0]+2.1) + 0.5*U[i,j,k]*U[i,j,k]
-                # Compute next state based on actor prediction on u
-                x_next = X[i,j,k,0] + dt*X[i,j,k,1] + 0.5 * dt**2 * u
-                v_next = X[i,j,k,1] + dt*u
-                X[i,j,k+1,0] = x_next
-                X[i,j,k+1,1] = v_next
-                state_next = np.array([[x_next], [v_next]]).reshape((1,2,1))
-                # Predict next control to be applied
-                if k<N-1:
-                    u_pred = model_actor.predict(state_next, verbose=0)
-                    u = np.array(u_pred)
-                    U[i,j,k+1] = u
-            V_direct[i,j] = V_direct[i,j] + (X[i,j,N,0]-1.9)*(X[i,j,N,0]-1.0)*(X[i,j,N,0]-0.6)*(X[i,j,N,0]+0.5)*(X[i,j,N,0]+1.2)*(X[i,j,N,0]+2.1)
+            X[i,j,0] = x_init[i]
+            V[i,j,0] = v_init[j]
 
-        if i%5==0:
-            print(i*100/N_OCP, "%")
-        
+    states = np.dstack((X[:,:,0], V[:,:,0]))
+    states = states.reshape((-1, 2, 1))
+    pi_predicted = model_actor.predict(states)
+    pi_pred = np.array(pi_predicted)
+    pi = pi_pred.reshape(x_grid.shape)
+    for i in range(N_OCP):
+        for j in range(N_OCP):
+            U[i,j,0] = pi[i,j]
+            V_direct[i,j] = V_direct[i,j] + (X[i,j,0]-1.9)*(X[i,j,0]-1.0)*(X[i,j,0]-0.6)*(X[i,j,0]+0.5)*(X[i,j,0]+1.2)*(X[i,j,0]+2.1) + 0.5*U[i,j,0]*U[i,j,0]
+    
+
+    # Next steps
+    for k in range(1,N+1):
+        for i in range(N_OCP):
+            for j in range(N_OCP):
+                X[i,j,k] = X[i,j,k-1] + dt*V[i,j,k-1] + 0.5 * dt**2 * U[i,j,k-1]
+                V[i,j,k] = V[i,j,k-1] + dt*U[i,j,k-1]
+
+        if k<N:
+            states = np.dstack((X[:,:,k], V[:,:,k]))
+            states = states.reshape((-1, 2, 1))
+            pi_predicted = model_actor.predict(states)
+            pi_pred = np.array(pi_predicted)
+            pi = pi_pred.reshape(x_grid.shape)
+            for i in range(N_OCP):
+                for j in range(N_OCP):
+                    U[i,j,k] = pi[i,j]
+                    V_direct[i,j] = V_direct[i,j] + (X[i,j,k]-1.9)*(X[i,j,k]-1.0)*(X[i,j,k]-0.6)*(X[i,j,k]+0.5)*(X[i,j,k]+1.2)*(X[i,j,k]+2.1) + 0.5*U[i,j,k]*U[i,j,k]
+    # Add terminal cost
+    for i in range(N_OCP):
+        for j in range(N_OCP):
+            V_direct[i,j] = V_direct[i,j] + (X[i,j,N]-1.9)*(X[i,j,N]-1.0)*(X[i,j,N]-0.6)*(X[i,j,N]+0.5)*(X[i,j,N]+1.2)*(X[i,j,N]+2.1)
+
+
     if plot:
 
         # 3D plots
@@ -121,20 +130,6 @@ if __name__=="__main__":
         ax.set_ylabel('Initial velocity')
         ax.set_zlabel('Cost')
         ax.set_title('Cost with direct control from actor')
-        plt.show()
-
-        # Cost (smaller range)
-        x_small = x_init[20:81] # don't take first 20 and last 20 elements
-        vel_small = v_init[20:81]
-        V_small = V_direct[20:81, 20:81]
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        X_plot, Y_plot = np.meshgrid(x_small, vel_small)
-        ax.plot_surface(X_plot, Y_plot, V_small, cmap='viridis')
-        ax.set_xlabel('Initial position')
-        ax.set_ylabel('Initial velocity')
-        ax.set_zlabel('Cost')
-        ax.set_title('Cost of OCPs with direct control from actor')
         plt.show()
 
         # Plot control
@@ -162,7 +157,7 @@ if __name__=="__main__":
             pos_plot = np.zeros((N_OCP,N_OCP))
             for i in range(N_OCP):
                 for j in range(N_OCP):
-                    pos_plot[i,j] = X[i,j,k,0]
+                    pos_plot[i,j] = X[i,j,k]
             ax.plot_surface(X_plot, Y_plot, pos_plot, cmap='viridis')
             ax.set_xlabel('Initial position')
             ax.set_ylabel('Initial velocity')
@@ -177,7 +172,7 @@ if __name__=="__main__":
             vel_plot = np.zeros((N_OCP,N_OCP))
             for i in range(N_OCP):
                 for j in range(N_OCP):
-                    vel_plot[i,j] = X[i,j,k,1]
+                    vel_plot[i,j] = V[i,j,k]
             ax.plot_surface(X_plot, Y_plot, vel_plot, cmap='viridis')
             ax.set_xlabel('Initial position')
             ax.set_ylabel('Initial velocity')
@@ -185,17 +180,17 @@ if __name__=="__main__":
             ax.set_title('Velocity trajectory of OCPs directly controlled by actor')
             plt.show()
 
-        # Plot trajectory of state A
+        '''# Plot trajectory of state A
 
         # Position
-        plt.plot(X[25,25,:,0])
+        plt.plot(X[25,25,:])
         plt.xlabel('Time step')  
         plt.ylabel('Position')  
         plt.title('State trajectory')     
         plt.grid(True)  
         plt.show()
         # Velocity
-        plt.plot(X[25,25,:,1])
+        plt.plot(V[25,25,:])
         plt.xlabel('Time step')  
         plt.ylabel('Velocity')  
         plt.title('State trajectory')     
@@ -205,36 +200,20 @@ if __name__=="__main__":
         # Plot trajectory of state B
 
         # Position
-        plt.plot(X[45,45,:,0])
+        plt.plot(X[45,45,:])
         plt.xlabel('Time step')  
         plt.ylabel('Position')  
         plt.title('State trajectory')     
         plt.grid(True)  
         plt.show()
         # Velocity
-        plt.plot(X[45,45,:,1])
+        plt.plot(V[45,45,:])
         plt.xlabel('Time step')  
         plt.ylabel('Velocity')  
         plt.title('State trajectory')     
         plt.grid(True)  
-        plt.show()
+        plt.show()     ''' 
 
-        # Plot trajectory of state C
-
-        # Position
-        plt.plot(X[0,0,:,0])
-        plt.xlabel('Time step')  
-        plt.ylabel('Position')  
-        plt.title('State trajectory')     
-        plt.grid(True)  
-        plt.show()
-        # Velocity
-        plt.plot(X[0,0,:,1])
-        plt.xlabel('Time step')  
-        plt.ylabel('Velocity')  
-        plt.title('State trajectory')     
-        plt.grid(True)  
-        plt.show()       
 
     # ------------CASE 2-------------
     # OCP solution with actor predictions as initial guess (both states and control)
@@ -242,16 +221,20 @@ if __name__=="__main__":
     ocp = OcpDoubleIntegrator(dt, w_u, u_min, u_max)
 
     # solve OCP starting from different initial states
-    V = np.zeros((N_OCP, N_OCP))    # array of V(x0) for each initial state
+    V_cost = np.zeros((N_OCP, N_OCP))    # array of V(x0) for each initial state
     u_optimal = np.zeros((N_OCP, N_OCP, N))
     x_traj = np.zeros((N_OCP, N_OCP, N+1, 2))
+    guess_states = np.zeros((N_OCP, N_OCP, N+1, 2))
+    guess_states[:,:,:,0] = X
+    guess_states[:,:,:,1] = V
+    
     for i in range(0, N_OCP):
         for j in range(0, N_OCP):
-            sol = ocp.solve(x_init[i], v_init[j], N, X_guess=X[i,j,:,:], U_guess=U[i,j,:])
-            V[i,j] = sol.value(ocp.cost)
+            sol = ocp.solve(x_init[i], v_init[j], N, X_guess=guess_states[i,j,:,:], U_guess=U[i,j,:])
+            V_cost[i,j] = sol.value(ocp.cost)
             u_optimal[i,j,:] = sol.value(ocp.u)
             x_traj[i,j,:,:] = sol.value(ocp.x)
-            print("OCP number ", i*N_OCP+j, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V[i,j], "Optimal control: ", u_optimal[i,j,:])
+            print("OCP number ", i*N_OCP+j, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V_cost[i,j], "Optimal control: ", u_optimal[i,j,:])
     if plot:
 
         # 3D plots
@@ -259,7 +242,7 @@ if __name__=="__main__":
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
         X_plot, Y_plot = np.meshgrid(x_init, v_init)
-        ax.plot_surface(X_plot, Y_plot, V, cmap='viridis')
+        ax.plot_surface(X_plot, Y_plot, V_cost, cmap='viridis')
         ax.set_xlabel('Initial position')
         ax.set_ylabel('Initial velocity')
         ax.set_zlabel('Cost')
@@ -314,7 +297,7 @@ if __name__=="__main__":
             ax.set_title('Velocity trajectory of OCPs with initial guess from actor')
             plt.show()
 
-        # Plot trajectory of state A
+        ''' # Plot trajectory of state A
 
         # Position
         plt.plot(x_traj[25,25,:,0])
@@ -346,4 +329,4 @@ if __name__=="__main__":
         plt.ylabel('Velocity')  
         plt.title('State trajectory')     
         plt.grid(True)  
-        plt.show()       
+        plt.show()     '''  

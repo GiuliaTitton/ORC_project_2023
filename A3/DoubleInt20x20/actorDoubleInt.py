@@ -2,16 +2,19 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from itertools import product
 
 # Load data from minimization results
 data = np.load('minimization_results_double.npz')
 x_data = data['x_init']
 velocity_data = data['v_init']
 x_grid, vel_grid = np.meshgrid(x_data, velocity_data)
-states_data = np.stack((x_grid, vel_grid), axis=-1)
-states_data = states_data.reshape((-1, 2, 1))
-print(states_data)
-pi = data['pi_new']
+states = np.stack((x_grid, vel_grid), axis=-1)
+states_reshaped = states.reshape((-1, 2, 1))
+states_rotated = np.array(list(product(states_reshaped[:, 0, 0], np.unique(states_reshaped[:, 1, 0]))))
+states_data_all = states_rotated.reshape((20,-1, 2, 1))
+states_data = states_data_all[0,:,:,:]
+pi = data['pi']
 pi = np.array(pi).reshape((-1, 1))
 
 # Create and shuffle dataset
