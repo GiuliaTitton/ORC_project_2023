@@ -1,7 +1,7 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import time
 from itertools import product
 
 # Load data from minimization results
@@ -70,16 +70,14 @@ pi_test = np.array(pi_test)
 nx = 2
 model = tf.keras.models.Sequential([
   tf.keras.layers.Flatten(input_shape=(nx, 1)),
-  tf.keras.layers.Dense(64, activation='relu'),
-  tf.keras.layers.Dense(128, activation='relu'),
-  tf.keras.layers.Dense(64, activation='relu'),
   tf.keras.layers.Dense(32, activation='relu'),
-  tf.keras.layers.Dense(32, activation='relu'),
-  tf.keras.layers.Dense(64, activation='relu'),
+  tf.keras.layers.Dense(16, activation='relu'),
+  tf.keras.layers.Dense(16, activation='relu'),
   tf.keras.layers.Dense(1)
 ])
 model.summary()
 
+start_time = time.time()
 
 print("Compiling model...")
 model.compile(optimizer=tf.keras.optimizers.Adam(),
@@ -88,7 +86,7 @@ model.compile(optimizer=tf.keras.optimizers.Adam(),
 print("Model compiled successfully")
 
 # Train and validate the model 
-EPOCHS = 300 # 100
+EPOCHS = 100 # 100
 BATCH_SIZE = 32 
 
 # Test the model
@@ -97,6 +95,10 @@ history = model.fit(states_train, pi_train, epochs=EPOCHS, batch_size=BATCH_SIZE
 
 print("Making predictions...")
 predictions = model.predict(states_test)
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"Elapsed time in actor training: {elapsed_time} seconds")
 
 # Make predictions on the whole dataset
 prediction_tot_dataset = model.predict(states_data)

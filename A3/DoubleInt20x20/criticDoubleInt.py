@@ -1,7 +1,7 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
+import time
 
 
 # Load data from OCP results
@@ -69,14 +69,14 @@ V_test = np.array(V_test)
 nx = 2
 model = tf.keras.models.Sequential([
   tf.keras.layers.Flatten(input_shape=(nx, 1)),
-  tf.keras.layers.Dense(128, activation='relu'),
-  tf.keras.layers.Dense(64, activation='relu'),
   tf.keras.layers.Dense(32, activation='relu'),
-  tf.keras.layers.Dense(32, activation='relu'),
-  tf.keras.layers.Dense(64, activation='relu'),
+  tf.keras.layers.Dense(16, activation='relu'),
+  tf.keras.layers.Dense(16, activation='relu'),
   tf.keras.layers.Dense(1)
 ])
 model.summary()
+
+start_time = time.time()
 
 print("Compiling model...")
 model.compile(optimizer=tf.keras.optimizers.Adam(),
@@ -85,8 +85,8 @@ model.compile(optimizer=tf.keras.optimizers.Adam(),
 print("Model compiled successfully")
 
 # Train and validate the model 
-EPOCHS = 500 #70
-BATCH_SIZE = 32 
+EPOCHS = 1000 #70
+BATCH_SIZE = 16 
 
 print("Fitting model...")
 history = model.fit(states_train, V_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(states_val, V_val))
@@ -94,6 +94,10 @@ history = model.fit(states_train, V_train, epochs=EPOCHS, batch_size=BATCH_SIZE,
 # Test the model
 print("Making predictions...")
 predictions = model.predict(states_test)
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"Elapsed time in training critic: {elapsed_time} seconds")
 
 # Make predictions on the whole dataset
 prediction_tot_dataset = model.predict(states_data)

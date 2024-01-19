@@ -1,8 +1,8 @@
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from numpy.random import randint, uniform
+import time
 
 # Load states_data
 data = np.load('resultsDoubleInt.npz')
@@ -34,6 +34,8 @@ def l(x,u):
 
 # Create input for actor NN minimizing Q
 
+start_time = time.time()
+
 print("Computing pi...")
 pi = np.zeros((len(states_data)))
 # For each initial state
@@ -60,6 +62,10 @@ for i in range(len(states_data)):
     pi[i] = u_vector[pi_pos]
     if i%500==0:
         print(i*100/len(states_data), "%")        
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(f"Elapsed time in computing pi: {elapsed_time} seconds")
 
 # Plot results 
 fig = plt.figure()
