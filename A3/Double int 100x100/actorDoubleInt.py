@@ -2,68 +2,26 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import numpy as np
 import time
+from itertools import product
 
-# Carica states_data
-data = np.load('resultsDoubleInt.npz')
+# Load data from minimization results
+data = np.load('minimization_results_double.npz')
 x_data = data['x_init']
 velocity_data = data['v_init']
 x_grid, vel_grid = np.meshgrid(x_data, velocity_data)
-states_data = np.stack((x_grid, vel_grid), axis=-1)
-states_data = states_data.reshape((-1, 2, 1))
-
-# Time step
-dt = 0.1
-# Joint torque discretization
-u_max = 5
-n_u = 200
-u_vector = np.zeros(n_u+1)
-for i in range(n_u+1):
-    u_vector[i] = -u_max + i*2*u_max/n_u
+states = np.stack((x_grid, vel_grid), axis=-1)
+states_reshaped = states.reshape((-1, 2, 1))
+states_rotated = np.array(list(product(states_reshaped[:, 0, 0], np.unique(states_reshaped[:, 1, 0]))))
+states_data_all = states_rotated.reshape((100,-1, 2, 1))
+states_data = states_data_all[0,:,:,:]
+pi = data['pi']
+pi = np.array(pi).reshape((-1, 1))
 
 # Carica critic allenato
 model_critic = tf.keras.models.load_model('model_critic_doubleIntegrator')
 print("Model critic loaded: ")
 model_critic.summary()
 
-# Running cost
-def l(x,u):
-    x_term = (x - 1.9) * (x - 1.0) * (x - 0.6) * (x + 0.5) * (x + 1.2) * (x + 2.1)
-    u_term = 0.5 * u**2 
-    cost = u_term + x_term 
-    return cost
-
-# Crea input per l'actor minimizzando Q
-start_time=time.time()
-pi = np.zeros(len(states_data))
-print("Computing pi ...")
-
-# For each initial state
-for i in range(len(states_data)):
-    x_next = np.zeros(len(u_vector))
-    v_next = np.zeros(len(u_vector))
-    # Find possible x_next, v_next depending on u
-    for j in range(len(u_vector)):
-        x_next[j] = states_data[i, 0, 0] + dt * states_data[i, 1, 0] + 0.5 * (dt**2) * u_vector[j]
-        v_next[j] = states_data[i, 1, 0] + dt * u_vector[j]
-    # Predict V(x_next) for each possible u
-    states_next = np.column_stack((x_next, v_next))
-    states_next = states_next.reshape((-1, 2, 1))
-    V_pred_dataset = model_critic.predict(states_next, verbose=0)
-    # Transform V_pred from dataset to numpy array
-    V_pred = np.array(V_pred_dataset)
-    V_pred = V_pred.flatten()
-
-    # Find greedy policy minimizing Q
-    Q = np.zeros(len(u_vector))
-    for j in range(len(u_vector)):
-        Q[j] = l(states_data[i, 0, 0], u_vector[j]) + V_pred[j]
-    pi_pos = np.argmin(Q)
-    pi[i] = u_vector[pi_pos] 
-    if i%50==0:
-        print(f"iteration: {i}/{len(states_data)}")
-
-end_time=time.time() 
-print(f"Elapsed time for calculating pi: {end_time-start_time} seconds")
 # Crea dataset e mescola i dati
 states_tensor = tf.convert_to_tensor(states_data, dtype=tf.float32)
 pi_tensor = tf.convert_to_tensor(pi, dtype=tf.float32)
@@ -117,11 +75,9 @@ pi_test = np.array(pi_test)
 nx = 2
 model = tf.keras.models.Sequential([
   tf.keras.layers.Flatten(input_shape=(nx, 1)),
-  tf.keras.layers.Dense(128, activation='relu'),
-  tf.keras.layers.Dense(64, activation='relu'),
   tf.keras.layers.Dense(32, activation='relu'),
-  tf.keras.layers.Dense(32, activation='relu'),
-  tf.keras.layers.Dense(64, activation='relu'),
+  tf.keras.layers.Dense(16, activation='relu'),
+  tf.keras.layers.Dense(16, activation='relu'),
   tf.keras.layers.Dense(1)
 ])
 model.summary()
@@ -135,7 +91,7 @@ model.compile(optimizer=tf.keras.optimizers.Adam(),
 print("Model compiled successfully")
 
 # Allena e valuta il modello 
-EPOCHS = 10
+EPOCHS = 15
 BATCH_SIZE = 32 
 
 print("Fitting model...")
@@ -160,8 +116,8 @@ ax.set_title('Actor predictions')
 fig.colorbar(surf, ax=ax, shrink=0.5, aspect=10)
 plt.show()
 
-#salva su file i valori predetti 
-np.savez('ActorResults.npz', prediction_tot_dataset=prediction_tot_dataset, states_data=states_data)
+# Save predicted data  
+np.savez('PredictionsForOCP_double.npz', prediction_tot_dataset=prediction_tot_dataset)
 
-#print(f"Prediction tot dataset: {prediction_tot_dataset}")
-#print(prediction_tot_dataset.shape)
+# Save the model
+model.save('model_actor_double')
