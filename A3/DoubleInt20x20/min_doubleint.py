@@ -59,46 +59,7 @@ for i in range(len(states_data)):
     pi_pos = np.argmin(Q)
     pi[i] = u_vector[pi_pos]
     if i%500==0:
-        print(i*100/len(states_data), "%")
-
-nIter = 2
-exploration_prob                = 1     # initialize the exploration probability to 1
-exploration_decreasing_decay    = 0.001 # exploration decay for exponential decreasing
-min_exploration_prob            = 0.001 # minimum of exploration probability
-pi_new = np.zeros((len(states_data)))
-for n in range(nIter):
-    # For each initial state
-    for i in range(len(states_data)):
-        x_next = np.zeros(len(u_vector))
-        v_next = np.zeros(len(u_vector))
-        u_new_vec = np.zeros(len(u_vector))
-        # Find possible x_next, v_next depending on u
-        for j in range(len(u_vector)):
-            # epsilon-greedy policy
-            if uniform(0,1) < exploration_prob:
-                u = randint(200)/20-5 # select random value between -5 and 5 (200 possible values)
-            else:
-                u = pi[j]
-            u_new_vec[j] = u
-            x_next[j] = states_data[i, 0, 0] + dt * states_data[i, 1, 0] + 0.5 * (dt**2) * u
-            v_next[j] = states_data[i, 1, 0] + dt * u
-        # Predict V(states_next) for each possible u
-        states_next = np.column_stack((x_next, v_next))
-        states_next = states_next.reshape((-1, 2, 1))
-        V_pred_dataset = model_critic.predict(states_next, verbose=0)
-        # Transform V_pred from dataset to numpy array
-        V_pred = np.array(V_pred_dataset)
-        V_pred = V_pred.flatten()
-        # Find greedy policy minimizing Q
-        Q = np.zeros(len(u_vector))
-        for j in range(len(u_vector)):
-            Q[j] = l(states_data[i, 0, 0], u_new_vec[j]) + V_pred[j]
-        pi_pos = np.argmin(Q)
-        pi_new[i] = u_new_vec[pi_pos]
-        if i%500==0:
-            print(i*100/len(states_data), "%")
-    exploration_prob = max(min_exploration_prob,np.exp(-exploration_decreasing_decay*n))
-        
+        print(i*100/len(states_data), "%")        
 
 # Plot results 
 fig = plt.figure()
@@ -112,17 +73,5 @@ ax.set_zlabel('Policy')
 ax.set_title('Greedy policy based on critic predictions')
 plt.show() 
 
-# Plot results 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-X, Y = np.meshgrid(x_data, velocity_data)
-pi_new_plot = pi_new.reshape(X.shape)
-ax.plot_surface(X, Y, pi_new_plot, cmap='viridis')
-ax.set_xlabel('Initial position')
-ax.set_ylabel('Initial velocity')
-ax.set_zlabel('Epsilon greedy policy')
-ax.set_title('Epsilon greedy policy based on critic predictions')
-plt.show() 
-
 # Save results
-np.savez('minimization_results_double.npz', x_init=x_data, v_init=velocity_data, pi=pi, pi_new = pi_new)
+np.savez('minimization_results_double.npz', x_init=x_data, v_init=velocity_data, pi=pi)
