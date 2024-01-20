@@ -69,9 +69,9 @@ V_test = np.array(V_test)
 nx = 2
 model = tf.keras.models.Sequential([
   tf.keras.layers.Flatten(input_shape=(nx, 1)),
+  tf.keras.layers.Dense(16, activation='relu'),
+  tf.keras.layers.Dense(64, activation='relu'),
   tf.keras.layers.Dense(32, activation='relu'),
-  tf.keras.layers.Dense(16, activation='relu'),
-  tf.keras.layers.Dense(16, activation='relu'),
   tf.keras.layers.Dense(1)
 ])
 model.summary()
@@ -85,8 +85,8 @@ model.compile(optimizer=tf.keras.optimizers.Adam(),
 print("Model compiled successfully")
 
 # Train and validate the model 
-EPOCHS = 70
-BATCH_SIZE = 16 
+EPOCHS = 100
+BATCH_SIZE = 32 
 
 print("Fitting model...")
 history = model.fit(states_train, V_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_data=(states_val, V_val))

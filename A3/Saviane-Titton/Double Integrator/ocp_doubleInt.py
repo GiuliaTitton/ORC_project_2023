@@ -36,8 +36,7 @@ class OcpDoubleIntegrator:
         self.opti.minimize(self.cost)
 
         for i in range(N):
-            #self.opti.subject_to( x[i+1]==x[i] + self.dt*u[i] )
-            self.opti.subject_to(x[i+1,0] ==x[i,0] + self.dt * x[i,1] + 0.5 * self.dt**2 * u[i])  # Position update
+            self.opti.subject_to(x[i+1,0] ==x[i,0] + self.dt * x[i,1] + 0.5 * self.dt**2 * u[i]) # Position update
             self.opti.subject_to(x[i+1,1] == x[i,1] + self.dt * u[i])
         if self.u_min is not None and self.u_max is not None:
             for i in range(N):
@@ -45,9 +44,8 @@ class OcpDoubleIntegrator:
         self.opti.subject_to(x[0, 0] == x_init)
         self.opti.subject_to(x[0, 1] == v_init)
 
-        # s_opts = {"max_iter": 100}
         opts = {'ipopt.print_level': 0, 'print_time': 0, 'ipopt.sb': 'yes'}
-        self.opti.solver("ipopt", opts) #, s_opts)
+        self.opti.solver("ipopt", opts)
 
         return self.opti.solve()
 
@@ -68,17 +66,16 @@ if __name__=="__main__":
     # solve OCP starting from different initial states
     x_init = np.linspace(-2.2, 2.0, N_OCP) # array of initial states
     v_init = np.linspace(-1.0, 1.0, N_OCP) # array of initial velocities
-    #v_init = np.random.uniform(low=0, high=10, size=N_OCP)
-    V = np.zeros((N_OCP, N_OCP))                    # array of V(x0) for each initial state
-    u_optimal = np.zeros((N_OCP, N_OCP))
+    V = np.zeros((N_OCP, N_OCP))    # array of V(x0) for each initial state
+    u_optimal = np.zeros((N_OCP, N_OCP, N))
+    x_traj = np.zeros((N_OCP, N_OCP, N+1, 2))
     for i in range(0, N_OCP):
         for j in range(0, N_OCP):
             sol = ocp.solve(x_init[i],v_init[j], N)
             V[i,j] = sol.value(ocp.cost)
-            # , [ocp.x==[x_init[i], v_init[j]]]
-            u_optimal[i, j] = sol.value(ocp.u)[0]
-            if j%20==0:
-                print("OCP number ", i, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V[i,j])
+            u_optimal[i,j,:] = sol.value(ocp.u)
+            x_traj[i,j,:,:] = sol.value(ocp.x)
+            print("OCP number ", i*N_OCP+j, "\n Initial position: ", sol.value(ocp.x[0,0]), "Initial velocity: ", sol.value(ocp.x[0,1]), "\n Cost: ", V[i,j], "Optimal control: ", u_optimal[i,j,:])
     if plot:
 
         # 3D plots
@@ -173,16 +170,10 @@ if __name__=="__main__":
         plt.ylabel('Velocity')  
         plt.title('State trajectory')     
         plt.grid(True)  
-        plt.show()  
-    
+        plt.show()                              
+            
     # Saving data to a Numpy .npz file
     np.savez('resultsDoubleInt.npz', x_init=x_init, v_init=v_init, V=V)
-
-    # Loading data from a Numpy .npz file
-    data = np.load('resultsDoubleInt.npz')
-    x_init_values = data['x_init']
-    v_init_values = data['v_init']
-    V_values = data['V']
     
     print("INITIAL STATES: ", x_init)
     print("INITIAL VELOCITITES: ", v_init)
