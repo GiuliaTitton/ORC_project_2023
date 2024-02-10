@@ -22,4 +22,4 @@ Lastly, A3 folder contains the final project. It involves solving multiple Optim
 The goal is to train two neural networks: a "critic" to predict the cost V based on the initial state, and an "actor" to approximate the greedy policy with respect to the critic.
 Once trained, the critic can be used for direct system control or to compute initial estimates for the OCP solver.
 The analysis starts with a simple 1D single integrator system and progresses to a more complex double integrator system.
-The subfolder "Saviane-Titton" contains the final version of the project with the working code.
+The subfolder "Saviane-Titton" contains the final version of the project.
